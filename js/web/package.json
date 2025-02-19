@@ -1,0 +1,17 @@
+{
+  "name": "userlens-analytics-sdk",
+  "version": "0.0.1",
+  "main": "dist/userlens.cjs.js",
+  "module": "dist/userlens.esm.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rollup -c"
+  },
+  "author": "Wudpecker",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "rollup": "^4.34.6",
+    "@rollup/plugin-node-resolve": "^16.0.0"
+  }
+}

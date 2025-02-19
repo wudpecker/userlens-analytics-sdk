@@ -1,0 +1,14 @@
+{
+  "name": "userlens-sdk",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "node",
+    "web"
+  ],
+  "scripts": {
+    "build": "pnpm -r run build",
+    "test": "pnpm -r run test"
+  },
+  "devDependencies": {}
+}
