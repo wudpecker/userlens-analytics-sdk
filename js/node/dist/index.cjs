@@ -19,9 +19,6 @@ const track = (teamUuid, body) => {
   });
 };
 
-// import { track } from "./api";
-
-
 class EventTracker {
   constructor(writeCode) {
     if (!writeCode) {

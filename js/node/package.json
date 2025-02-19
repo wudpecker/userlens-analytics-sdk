@@ -1,6 +1,6 @@
 {
   "name": "userlens-analytics-sdk-node",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "scripts": {

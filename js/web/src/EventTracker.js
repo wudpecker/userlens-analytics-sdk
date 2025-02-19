@@ -1,7 +1,7 @@
 import { track } from "./api";
 
 class EventTracker {
-  constructor(writeCode, userId = "", identifyOnTrack = false) {
+  constructor(writeCode = "", userId = "") {
     if (!writeCode || !userId) {
       console.error(
         "Userlens EventTracker error: missing writeCode or userId."
@@ -10,35 +10,27 @@ class EventTracker {
 
     this.writeCode = writeCode;
     this.userId = userId;
-    this.identifyOnTrack = identifyOnTrack;
-  }
-
-  setUserId(userId) {
-    this.userId = userId;
-  }
-
-  setWriteCode(writeCode) {
-    this.writeCode = writeCode;
   }
 
   // private method to validate traits object
-  #validateTraits(traits) {
-    if (!traits || typeof traits !== "object" || Array.isArray(traits)) {
-      console.error("Userlens SDK error: Invalid traits object:", traits);
+  #validateTraits(traits = {}) {
+    if (typeof traits !== "object") {
+      console.error(
+        "Userlens identifyUser error: Invalid traits object:",
+        traits
+      );
       return false;
     }
-
-    return Object.keys(traits).length > 0; // Return true if traits is not empty
   }
 
   identifyUser(traits = {}) {
-    if (this.#validateTraits(traits)) {
-      track(this.writeCode, {
-        type: "identify",
-        userId: this.userId,
-        traits,
-      });
-    }
+    if (!this.#validateTraits(traits)) return;
+
+    return track(this.writeCode, {
+      type: "identify",
+      userId: this.userId,
+      traits,
+    });
   }
 
   // method to track an event
@@ -48,17 +40,32 @@ class EventTracker {
       return;
     }
 
-    track(this.writeCode, {
-      type: "track",
-      userId: this.userId,
-      event: eventName,
-      timestamp: new Date().toISOString(),
-      source: "userlens-analytics-sdk",
-    });
-
-    if (this.identifyOnTrack) {
-      this.identifyUser(traits);
+    if (typeof this.userId !== "string" && typeof this.userId !== "number") {
+      console.error(
+        "Userlens identifyUser error: User ID must be a string or a number"
+      );
+      return Promise.resolve();
     }
+
+    if (typeof this.userId === "string" && this.userId.trim() === "") {
+      console.error(
+        "Userlens identifyUser error: User ID cannot be an empty string."
+      );
+      return Promise.resolve();
+    }
+
+    return Promise.all([
+      track(this.writeCode, {
+        type: "track",
+        userId: this.userId,
+        event: eventName,
+        timestamp: new Date().toISOString(),
+        source: "userlens-analytics-sdk",
+      }),
+      this.identifyUser(traits).catch((err) => {
+        console.error("Userlens trackEvent error:", err);
+      }),
+    ]);
   }
 }
 

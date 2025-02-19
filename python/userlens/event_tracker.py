@@ -1,5 +1,4 @@
 import requests
-import asyncio
 
 from datetime import datetime
 
@@ -53,8 +52,11 @@ class EventTracker:
 
     def track(self, user_id = "", event_name = "", traits = {}):
         try:
-            if not user_id:
-                raise ValueError('user_id is required')
+            if not isinstance(user_id, (str, int)):
+                raise TypeError("user_id must be either an integer or a string")
+        
+            if isinstance(user_id, str) and not user_id.strip():
+                raise ValueError("user_id cannot be an empty string")
             
             if not event_name:
                 raise ValueError('event_name is required')

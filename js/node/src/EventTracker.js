@@ -1,68 +1,3 @@
-// import { track } from "./api";
-
-// class EventTracker {
-//   constructor(writeCode) {
-//     if (!writeCode) {
-//       console.error(
-//         "Userlens EventTracker error: missing writeCode or userId."
-//       );
-//     }
-
-//     this.writeCode = writeCode;
-//   }
-
-//   // private method to validate traits object
-//   #validateTraits(traits) {
-//     if (!traits || typeof traits !== "object" || Array.isArray(traits)) {
-//       console.error("Userlens SDK error: Invalid traits object:", traits);
-//       return false;
-//     }
-
-//     return Object.keys(traits).length > 0; // Return true if traits is not empty
-//   }
-
-//   identifyUser(userId, traits = {}) {
-//     if (!userId) {
-//       console.error("Userlens identifyUser error: User ID is required");
-//       return;
-//     }
-
-//     if (!this.#validateTraits(traits)) {
-//       return;
-//     }
-
-//     track(this.writeCode, {
-//       type: "identify",
-//       userId: userId,
-//       traits,
-//     });
-//   }
-
-//   // method to track an event
-//   trackEvent(userId, eventName = "", traits = {}) {
-//     if (!eventName) {
-//       console.error("Userlens trackEvent error: Event name is required");
-//       return;
-//     }
-
-//     if (!userId) {
-//       console.error("Userlens trackEvent error: User ID is required");
-//       return;
-//     }
-
-//     track(this.writeCode, {
-//       type: "track",
-//       userId: userId,
-//       event: eventName,
-//       timestamp: new Date().toISOString(),
-//       source: "userlens-analytics-sdk-node",
-//     });
-
-//     this.identifyUser(userId, traits);
-//   }
-// }
-
-// export default EventTracker;
 import { track } from "./api";
 
 class EventTracker {
@@ -81,16 +16,18 @@ class EventTracker {
   }
 
   identifyUser(userId, traits = {}) {
-    if (!userId) {
-      try {
-        console.error(
-          "Userlens identifyUser error: User ID is required. Received:",
-          userId
-        );
-      } catch (err) {
-        console.error("Userlens identifyUser error:", err);
-      }
-      return Promise.resolve(); // Avoid returning undefined
+    if (typeof userId !== "string" && typeof userId !== "number") {
+      console.error(
+        "Userlens identifyUser error: User ID must be a string or a number"
+      );
+      return Promise.resolve();
+    }
+
+    if (typeof userId === "string" && userId.trim() === "") {
+      console.error(
+        "Userlens identifyUser error: User ID cannot be an empty string."
+      );
+      return Promise.resolve();
     }
 
     if (!this.#validateTraits(traits)) {
@@ -116,8 +53,17 @@ class EventTracker {
       return Promise.resolve();
     }
 
-    if (!userId) {
-      console.error("Userlens trackEvent error: User ID is required");
+    if (typeof userId !== "string" && typeof userId !== "number") {
+      console.error(
+        "Userlens identifyUser error: User ID must be a string or a number"
+      );
+      return Promise.resolve();
+    }
+
+    if (typeof userId === "string" && userId.trim() === "") {
+      console.error(
+        "Userlens identifyUser error: User ID cannot be an empty string."
+      );
       return Promise.resolve();
     }
 
