@@ -19,10 +19,26 @@ const track = (teamUuid, body) => {
 
 class EventTracker {
   constructor(writeCode = "", userId = "") {
-    if (!writeCode || !userId) {
+    if (!writeCode || typeof writeCode !== "string") {
       console.error(
-        "Userlens EventTracker error: missing writeCode or userId."
+        "Userlens EventTracker error: missing invalid writeCode passed"
       );
+
+      return;
+    }
+
+    if (typeof this.userId !== "string" && typeof this.userId !== "number") {
+      console.error(
+        "Userlens identifyUser error: User ID must be a string or a number"
+      );
+      return;
+    }
+
+    if (typeof this.userId === "string" && this.userId.trim() === "") {
+      console.error(
+        "Userlens identifyUser error: User ID cannot be an empty string."
+      );
+      return;
     }
 
     this.writeCode = writeCode;
@@ -57,9 +73,18 @@ class EventTracker {
       return;
     }
 
-    if (!this.userId) {
-      console.error("Userlens trackEvent error: User ID is required");
-      return;
+    if (typeof this.userId !== "string" && typeof this.userId !== "number") {
+      console.error(
+        "Userlens identifyUser error: User ID must be a string or a number"
+      );
+      return Promise.resolve();
+    }
+
+    if (typeof this.userId === "string" && this.userId.trim() === "") {
+      console.error(
+        "Userlens identifyUser error: User ID cannot be an empty string."
+      );
+      return Promise.resolve();
     }
 
     return Promise.all([

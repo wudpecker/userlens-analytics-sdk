@@ -1,6 +1,6 @@
 {
   "name": "userlens-analytics-sdk",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "main": "dist/userlens.cjs.js",
   "module": "dist/userlens.esm.js",
   "scripts": {

@@ -2,10 +2,26 @@ import { track } from "./api";
 
 class EventTracker {
   constructor(writeCode = "", userId = "") {
-    if (!writeCode || !userId) {
+    if (!writeCode || typeof writeCode !== "string") {
       console.error(
-        "Userlens EventTracker error: missing writeCode or userId."
+        "Userlens EventTracker error: missing invalid writeCode passed"
       );
+
+      return;
+    }
+
+    if (typeof this.userId !== "string" && typeof this.userId !== "number") {
+      console.error(
+        "Userlens identifyUser error: User ID must be a string or a number"
+      );
+      return;
+    }
+
+    if (typeof this.userId === "string" && this.userId.trim() === "") {
+      console.error(
+        "Userlens identifyUser error: User ID cannot be an empty string."
+      );
+      return;
     }
 
     this.writeCode = writeCode;
