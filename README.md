@@ -44,6 +44,23 @@ import EventTracker from "userlens-analytics-sdk-node";
 ```javascript
 const tracker = new EventTracker("your-write-code");
 ```
+- **writeCode** (*str*): Write code that can be retrieved from your profile settings on app.userlens.io
+
+### Identify
+Identify is used to save/update user data and is triggered automatically on every trackEvent call.
+```javascript
+tracker.identifyUser("john@doe.com", { plan: "Pro", firstName: "John", secondName: "Doe" });
+```
+- **userId** (*str*): Unique user identifier.
+- **traits** (*obj*): User attributes (e.g., name, plan, etc.).
+
+### Track
+```javascript
+tracker.trackEvent("john@doe.com", "button_clicked", { plan: "Pro", firstName: "John", secondName: "Doe" });
+```
+- **userId** (*str*): Unique user identifier.
+- **eventName** (*str*): A name given to an event, some action performed by a user
+- **traits** (*obj*, optional): We recommend passing user properties on every trackEvent to keep user data up to date.
 
 ### Example: Express.js Analytics Endpoint
 
@@ -75,7 +92,7 @@ app.post("/analytics", (req, res) => {
     const { event } = req.body;
     if (!event) return res.status(400).json({ error: "Event name is required" });
 
-    // record an event on server side
+    // record an event
     tracker.trackEvent(email, event, {
       email,
       fullName,
@@ -95,14 +112,14 @@ app.listen(3000, () => console.log("Server running on port 3000"));
 ## Error Handling
 
 - If `writeCode` is missing, an error is logged.
-- If `userId` (email) is missing when calling `identifyUser` or `trackEvent`, an error is logged.
+- If `userId` is missing when calling `identifyUser` or `trackEvent`, an error is logged.
 - If `trackEvent` is called without an event name, an error is logged.
 
 # Python SDK
 
 ## Overview
 
-The **Userlens Analytics SDK for Python** provides a way to track user events and identify users via the Userlens event tracking system. This package supports both **synchronous** and **asynchronous** tracking using `requests` and `httpx`.
+The **Userlens Analytics SDK for Python** provides a way to track user events and identify users via the Userlens event tracking system.
 
 ## Installation
 
@@ -110,12 +127,6 @@ To install the SDK, use `pip`:
 
 ```sh
 pip install userlens-analytics-sdk
-```
-
-For **async support**, install with:
-
-```sh
-pip install userlens-analytics-sdk[async]
 ```
 
 ## Getting Started
@@ -132,88 +143,43 @@ from userlens.event_tracker import EventTracker
 tracker = EventTracker("YOUR_WRITE_CODE")
 ```
 
-- `write_code`: The authentication token (required).
+- `write_code`: Write code that can be retrieved from your profile settings on app.userlens.io
 - `requests_timeout`: Timeout for requests (default: `5` seconds).
 
 ---
 
 ## **Identify Users**
-
-### **Synchronous Identify**
-
+Identify is used to save/update user data and is triggered automatically on every track call.
 ```python
-tracker.identify("user_123", {"name": "Andrei", "email": "andrei@example.com"})
+tracker.identify("john@doe.com", {"name": "John", "surname": "Doe", "plan": "Pro"})
 ```
 
 - **user\_id** (*str*): Unique user identifier.
 - **traits** (*dict*): User attributes (e.g., name, email, etc.).
 
-### **Asynchronous Identify**
-
-```python
-import asyncio
-
-async def main():
-    await tracker.async_identify("user_123", {"name": "Andrei", "email": "andrei@example.com"})
-
-asyncio.run(main())
-```
-
----
-
 ## **Track Events**
 
-### **Synchronous Event Tracking**
+### **Event Tracking**
 
 ```python
-tracker.track("user_123", "Button Clicked")
+tracker.track("john@doe.com", "button_clicked", {"plan": "Pro", "name": "John", "surname": "Doe"})
 ```
-
 - **user\_id** (*str*): Unique user identifier.
 - **event\_name** (*str*): Event name (e.g., `"Button Clicked"`).
-- **traits** (*dict*, optional): **User traits** (not event metadata). It is recommended to pass user traits to keep user information updated in the system.
-
-#### **Correct Example:**
-
-```python
-tracker.track("user_123", "Purchase Made", {"name": "Andrei", "email": "andrei@example.com", "subscription": "premium"})
-```
-
-### **Asynchronous Event Tracking**
-
-```python
-import asyncio
-
-async def main():
-    await tracker.async_track("user_123", "Button Clicked", {"name": "Andrei", "email": "andrei@example.com"})
-
-asyncio.run(main())
-```
-
+- **traits** (*dict*, optional): We recommend passing user properties on every trackEvent to keep user data up to date.
+  
 ---
 
 ## **Advanced Usage**
-
-### **Handling Errors**
-
-If an API request fails, an exception is raised:
-
-```python
-try:
-    tracker.track("user_123", "Purchase", {"name": "Andrei", "email": "andrei@example.com"})
-except ValueError as e:
-    print("Tracking failed:", e)
-```
-
 ### **Custom Timeout**
-
+It is possible to pass custom requests timeout time.
 ```python
 tracker = EventTracker("YOUR_WRITE_CODE", requests_timeout=10)
 ```
 
 # Userlens.js - Web SDK
 
-Userlens.js is a lightweight analytics SDK designed for web applications. It helps track user events and identify users, providing insights into product usage.
+Although we recommend implementing event trackers on server side, we provide a possibility to track events and identify users on client side too.
 
 ## Installation
 
@@ -238,37 +204,33 @@ import EventTracker from "userlens-analytics-sdk";
 ```
 
 ### Initializing the Tracker
-
-Create an instance of `EventTracker` with your `writeCode`, `userId` (email), and an optional `identifyOnTrack` flag:
+Create an instance of `EventTracker` with your `writeCode` and `userId`:
 
 ```javascript
-const tracker = new EventTracker("your-write-code", "user@example.com", true);
+const tracker = new EventTracker("your-write-code", "john@doe.com");
 ```
 
 - `writeCode`: Your analytics write key.
-- `userId`: The email of the current user.
-- `identifyOnTrack` (optional, default: `false`): If set to `true`, the tracker ensures that user traits are updated automatically whenever an event is tracked.
+- `userId`: User ID of logged in user.
 
 ### Tracking Events
 
 Track an event with user traits:
 
 ```javascript
-tracker.trackEvent("button_clicked", { plan: "pro" });
+tracker.trackEvent("button_clicked", { plan: "pro", name: "John", surname: "Doe" });
 ```
 
-If `identifyOnTrack` was set to `true` at the time of initialization and user traits are passed, the SDK ensures that the profile traits remain up to date.
-
 ### Identifying Users
-
 Identify a user with additional traits at any time to update their profile:
 
 ```javascript
 tracker.identifyUser({ plan: "pro" });
 ```
 
-## Using in a React App with Context
+Identify will be called on every event track.
 
+## Using in a React App with Context
 For efficient usage in a React app, create a context to manage the `EventTracker` instance globally:
 
 ```javascript
@@ -278,7 +240,7 @@ import EventTracker from "userlens-analytics-sdk";
 const AnalyticsContext = createContext(null);
 
 export const AnalyticsProvider = ({ children }) => {
-  const tracker = useMemo(() => new EventTracker("your-write-code", "user@example.com", true), []);
+  const tracker = useMemo(() => new EventTracker("your-write-code", "user@example.com"), []);
 
   return (
     <AnalyticsContext.Provider value={tracker}>
