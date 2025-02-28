@@ -1,3 +1,5 @@
+import DOMPath from "chrome-dompath";
+
 export default class EventCollector {
   constructor(callback, intervalTime = 5000) {
     // check environment
@@ -60,45 +62,13 @@ export default class EventCollector {
   // retrieves selector of event target element
   // pushes selector to the array
   #handleClick(event) {
+    const selector = DOMPath.fullQualifiedSelector(event.target, true);
+
     const clickEvent = {
-      event: this.#getCssSelector(event.target)
+      event: selector
     };
 
     this.events.push(clickEvent);
     window.localStorage.setItem("userlensEvents", JSON.stringify(this.events));
-  }
-
-  // gets a css selector of a target element passed as parameter
-  #getCssSelector(element) {
-    const paths = [];
-    let currentElement = element;
-
-    while (currentElement !== document.body && currentElement !== document) {
-      let selector = currentElement.tagName.toLowerCase();
-
-      if (currentElement.id) {
-        selector += `#${currentElement.id}`;
-        paths.unshift(selector);
-
-        break;
-      } else {
-        if (currentElement.className && typeof currentElement.className === 'string') {
-          const classes = currentElement.className.trim().split(/\s+/);
-          if (classes.length) {
-            selector += `.${classes.join('.')}`;
-          }
-        }
-
-        const siblings = Array.from(currentElement.parentNode.children);
-        if (siblings.length > 1) {
-          const index = siblings.indexOf(currentElement) + 1;
-          selector += `:nth-child(${index})`;
-        }
-        paths.unshift(selector);
-      }
-      currentElement = currentElement.parentElement;
-    }
-
-    return paths.join(' > ');
   }
 }

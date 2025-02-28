@@ -1,6 +1,6 @@
 {
   "name": "userlens-analytics-sdk",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "dist/userlens.cjs.js",
   "module": "dist/userlens.esm.js",
   "scripts": {
@@ -11,7 +11,10 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "rollup": "^4.34.6",
-    "@rollup/plugin-node-resolve": "^16.0.0"
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "rollup": "^4.34.6"
+  },
+  "dependencies": {
+    "chrome-dompath": "^2.0.1"
   }
 }
