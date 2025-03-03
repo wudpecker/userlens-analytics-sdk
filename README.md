@@ -82,7 +82,7 @@ npm i userlens-analytics-sdk
 Import and initialize `EventCollector`:
 
 ```javascript
-import EventCollector from "userlens.js";
+import EventCollector from "userlens-analytics-sdk/src/EventCollector";
 ```
 
 ### Create API call function
@@ -94,7 +94,7 @@ export const trackEvents = (payload) => {
     axios
       .post(`https://your.backend.io/events`, payload, {
         headers: {
-          Authorization: `JWT ${get().token}`,
+          Authorization: `JWT <user_auth_token>`,
         }
       })
       .then((response) => {
@@ -112,6 +112,7 @@ export const trackEvents = (payload) => {
 The best way to initialize `EventCollector` will vary depending on your frontend set up. In a React/NextJS project you would initialize it on client side in your project layout. In this example we present how we are implementing `EventCollector` on our frontend.
 
 ```javascript
+// Route Protected layout (for authenticated users)
 // app/(navigation)/layout.js
 "use client";
 
@@ -171,7 +172,7 @@ export default function layout({ children }) {
 | `intervalTime` | Number   | `5000` (5s) | How often (in milliseconds) events should be sent. |
 
 ### Important note
-Our SDK records click events and takes an XPath of target element. We strongly recommend adding static IDs to all important for event tracking elements. This will ensure that events are mapped correctly and not a single event is ever missed.
+Our SDK records click events and takes an XPath of target element to identify it. We strongly recommend adding static IDs to all important for event tracking elements. This will ensure that events are mapped correctly and not a single event is ever missed.
 
 ## Server Side
 Next, you need to create an endpoint on your backend that is going to receive events from your frontend, append user object and forward events to Userlens raw events service.
