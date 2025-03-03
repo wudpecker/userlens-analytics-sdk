@@ -21,6 +21,116 @@
   - [Example with React Router DOM](#example-with-react-router-dom)
   - [Error Handling](#error-handling-1)
 
+# Introduction
+We offer a lightweight and flexible event tracking SDK designed to give you full control over how you collect and forward user events. Whether you prefer a fire-and-forget approach or need granular control over each event, we've got you covered. The package is framework agnostic and can be used within any frontend project as well as in pure JavaScript.
+
+## Two Ways to Track Events
+### Automatic Event Collection (Set Up Once & Watch)
+Use the `EventCollector` class to automatically capture and collect events. Simply initialize it with a callback and it will continiously collect events for you. You'll receive events in the callback, allowing you to process and forward them to your own API endpoint.
+
+### Manual Event Tracking (Track Every Event Explicitly)
+If you need more control, you can manually track events by adding event handlers wherever necessary. These events are sent to your own tracking endpoint, where you process them before forwarding them to our backend. This approach ensures you only track exactly what you need, when you need it.
+
+# Automatic approach with EventCollector
+The EventCollector class makes event tracking effortless by automatically capturing user interactions and batching them for processing. Simply initialize it with a callback function, and it will handle the rest.
+
+## How It Works
+- Captures Click Events: Tracks clicks on elements and stores the event data.
+- Uses Local Storage for Persistence: Ensures events are not lost between page reloads.
+- Batches Events: Periodically sends collected events to the provided callback.
+
+## Installation
+First, make sure to install the package.
+
+```sh
+npm i userlens-analytics-sdk
+```
+
+## Usage
+### Import
+Import and initialize `EventCollector`:
+
+```javascript
+import EventCollector from "userlens.js";
+```
+
+### Create API call function
+Create a function that is going to receive a payload with events and send it to your API endpoint.
+
+```javascript
+export const trackEvents = (payload) => {
+  return new Promise((resolve, reject) => {
+    axios
+      .post(`https://your.backend.io/events`, payload, {
+        headers: {
+          Authorization: `JWT ${get().token}`,
+        }
+      })
+      .then((response) => {
+        resolve(response.data);
+      })
+      .catch((error) => {
+        console.log("error", error);
+        reject(error);
+      });
+  })
+}
+```
+
+### Initialize 
+The best way to initialize `EventCollector` will vary depending on your frontend set up. In a React/NextJS project you would initialize it on client side in your project layout. In this example we present how we are implementing `EventCollector` on our frontend.
+
+```javascript
+"use client";
+
+import React, { useEffect } from "react";
+
+import Sidebar from "@/components/Sidebar";
+
+// import function that makes API call
+import { trackEvents } from "@/services/events";
+// import EventCollector class
+import EventCollector from "userlens-analytics-sdk/src/EventCollector";
+
+export default function layout({ children }) {
+  // wrap init EventCollector in useEffect to avoid init on every rerender
+  useEffect(() => {
+    // init EventCollector
+    new EventCollector((events) => { // receive events in callback
+      // call events tracking function
+      trackEvents({
+        payload: {
+          events: events
+        },
+      })
+        // optionally handle success
+        .then((response) => {
+          console.log(response);
+        })
+        // optionally handle error
+        .catch((err) => {
+          console.log(err);
+        })
+    })
+  }, []);
+
+  return (
+    <div
+      id="top-layout-div"
+      className="w-[100vw] h-[100vh] flex bg-orange-50 text-neutral-700"
+    >
+      <Sidebar />
+      <main
+        id="main-container"
+        className="bg-white flex-1 my-3 mr-3 relative rounded-xl border shadow-light border-neutral-100 overflow-y-auto p-8"
+      >
+        {children}
+      </main>
+    </div>
+  );
+}
+```
+
 # Userlens.js - Node.js SDK
 
 The best way to implement analytics with Userlens.js is on the server side. We strongly recommend keeping analytics logic on the backend to ensure accuracy, security, and better control over user data. Our Node.js package, userlens-analytics-sdk-node, can be integrated with any JavaScript backend framework or library. 
