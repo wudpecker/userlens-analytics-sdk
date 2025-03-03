@@ -8,7 +8,7 @@
 - [Automatic Approach with EventCollector](#automatic-approach-with-eventcollector)
   - [How It Works](#how-it-works)
   - [Installation](#installation)
-  - [Client Side Usage](#client-side-usage)
+  - [Client Side](#client-side)
     - [Import](#import)
     - [Create API Call Function](#create-api-call-function)
     - [Initialize](#initialize)
@@ -71,13 +71,13 @@ The EventCollector class makes event tracking effortless by automatically captur
 - Process Payload on Your Backend: Receive events and append `userId` from decoded JWT (if applicable) and `traits` to keep user object fresh.
 
 ## Installation
-First, make sure to install the package.
+First, make sure to install the package on your frontend project.
 
 ```sh
 npm i userlens-analytics-sdk
 ```
 
-## Client Side Usage
+## Client Side
 ### Import
 Import and initialize `EventCollector`:
 
@@ -112,6 +112,7 @@ export const trackEvents = (payload) => {
 The best way to initialize `EventCollector` will vary depending on your frontend set up. In a React/NextJS project you would initialize it on client side in your project layout. In this example we present how we are implementing `EventCollector` on our frontend.
 
 ```javascript
+// app/(navigation)/layout.js
 "use client";
 
 import React, { useEffect } from "react";
