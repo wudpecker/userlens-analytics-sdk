@@ -62,7 +62,7 @@ export default class EventCollector {
   // retrieves selector of event target element
   // pushes selector to the array
   #handleClick(event) {
-    const selector = DOMPath.fullQualifiedSelector(event.target, true);
+    const selector = DOMPath.xPath(event.target, true);
 
     const clickEvent = {
       event: selector
