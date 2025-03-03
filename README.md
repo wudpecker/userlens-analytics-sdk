@@ -1,25 +1,54 @@
 # Userlens.js - SDK Documentation
 
 ## Contents
-
-- [Node.js SDK](#userlensjs---nodejs-sdk)
+- [Introduction](#introduction)
+  - [Two Ways to Track Events](#two-ways-to-track-events)
+    - [Automatic Event Collection (Set Up Once & Watch)](#automatic-event-collection-set-up-once--watch)
+    - [Manual Event Tracking (Track Every Event Explicitly)](#manual-event-tracking-track-every-event-explicitly)
+- [Automatic Approach with EventCollector](#automatic-approach-with-eventcollector)
+  - [How It Works](#how-it-works)
   - [Installation](#installation)
+  - [Client Side Usage](#client-side-usage)
+    - [Import](#import)
+    - [Create API Call Function](#create-api-call-function)
+    - [Initialize](#initialize)
+    - [EventCollector Constructor Parameters](#eventcollector-constructor-parameters)
+    - [Important Note](#important-note)
+- [Server Side](#server-side)
+  - [Django Rest Framework](#django-rest-framework)
+  - [Express.js](#expressjs)
+- [Manual Approach with EventTracker](#manual-approach-with-eventtracker)
+- [Userlens.js - Node.js SDK](#userlensjs---nodejs-sdk)
+  - [Installation](#installation-1)
   - [Usage](#usage)
+    - [Importing the SDK](#importing-the-sdk)
+    - [Initializing the Tracker](#initializing-the-tracker)
+    - [Identify](#identify)
+    - [Track](#track)
   - [Example: Express.js Analytics Endpoint](#example-expressjs-analytics-endpoint)
   - [Error Handling](#error-handling)
-- [Python SDK](#userlensjs--python-sdk)
+- [Python SDK](#python-sdk)
   - [Overview](#overview)
-  - [Installation](#installation-1)
+  - [Installation](#installation-2)
   - [Getting Started](#getting-started)
+    - [Importing the SDK](#importing-the-sdk-1)
+    - [Initialize the Tracker](#initialize-the-tracker)
   - [Identify Users](#identify-users)
   - [Track Events](#track-events)
   - [Advanced Usage](#advanced-usage)
-- [Web SDK](#userlensjs---web-sdk)
-  - [Installation](#installation-2)
+    - [Custom Timeout](#custom-timeout)
+- [Userlens.js - Web SDK](#userlensjs---web-sdk)
+  - [Installation](#installation-3)
   - [Usage](#usage-2)
+    - [Importing the SDK](#importing-the-sdk-2)
+    - [Initializing the Tracker](#initializing-the-tracker-1)
+    - [Tracking Events](#tracking-events)
+    - [Identifying Users](#identifying-users)
   - [Using in a React App with Context](#using-in-a-react-app-with-context)
   - [Example with React Router DOM](#example-with-react-router-dom)
   - [Error Handling](#error-handling-1)
+- [License](#license)
+
 
 # Introduction
 We offer a lightweight and flexible event tracking SDK designed to give you full control over how you collect and forward user events. Whether you prefer a fire-and-forget approach or need granular control over each event, we've got you covered. The package is framework agnostic and can be used within any frontend project as well as in pure JavaScript.
@@ -263,6 +292,7 @@ app.post("/track-events", async (req, res) => {
 app.listen(3000, () => console.log("Server running on port 3000"));
 ```
 
+# Manual approach with EventTracker
 # Userlens.js - Node.js SDK
 
 The best way to implement analytics with Userlens.js is on the server side. We strongly recommend keeping analytics logic on the backend to ensure accuracy, security, and better control over user data. Our Node.js package, userlens-analytics-sdk-node, can be integrated with any JavaScript backend framework or library. 
