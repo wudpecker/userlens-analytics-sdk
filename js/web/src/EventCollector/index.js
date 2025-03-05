@@ -43,7 +43,7 @@ export default class EventCollector {
   // constructs a page view event object and pushes it to events, updates localStorage too.
   #trackPageview() {
     const pageview = {
-      event: "page_view",
+      event: "pageview",
       properties: {
         url: window.location.href,
         referrer: document.referrer,
