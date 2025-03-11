@@ -39,9 +39,16 @@ export default class EventCollector {
     this.#setupSPAListener();
     this.#trackPageview();
   }
+  
+  stop() {
+    this.#destroyCollector();
+    this.#destroySender();
+
+    this.#teardownSPAListener();
+  }
 
   // constructs a page view event object and pushes it to events, updates localStorage too.
-  #trackPageview() {
+  #trackPageview = () => {
     const pageview = {
       event: "pageview",
       properties: {
@@ -56,35 +63,50 @@ export default class EventCollector {
   }
 
   // detect SPA navigations using history API
+
+  #originalPushState
+  #originalReplaceState
+
   #setupSPAListener() {
-    const originalPushState = history.pushState;
-    const originalReplaceState = history.replaceState;
+    this.#originalPushState = history.pushState;
+    this.#originalReplaceState = history.replaceState;
 
     // hook into pushState & replaceState
     history.pushState = (...args) => {
-      originalPushState.apply(history, args);
+      this.#originalPushState.apply(history, args);
       this.#trackPageview();
     };
 
     history.replaceState = (...args) => {
-      originalReplaceState.apply(history, args);
+      this.#originalReplaceState.apply(history, args);
       this.#trackPageview();
     };
 
     // handle back/forward navigation
-    window.addEventListener("popstate", () => this.#trackPageview());
+    window.addEventListener("popstate",  this.#trackPageview);
+  }
+
+  #teardownSPAListener() {
+    history.pushState = this.#originalPushState;
+    history.replaceState = this.#originalReplaceState;
+    window.removeEventListener("popstate", this.#trackPageview);
   }
 
   // initialize click event listener
   #initializeCollector() {
-    document.body.addEventListener("click", (event) => {
-      this.#handleClick(event);
-    });
+    document.body.addEventListener("click", this.#handleClick);
+  }
+
+  #destroyCollector() {
+    document.body.removeEventListener("click", this.#handleClick);
   }
 
   // sends events and pageviews to callback, clears up states
+
+  #senderIntervalId; 
+
   #initializeSender() {
-    setInterval(() => {
+    this.#senderIntervalId = setInterval(() => {
       if (this.events.length > 0) {
         const eventsToSend = [...this.events];
 
@@ -95,6 +117,10 @@ export default class EventCollector {
     }, this.intervalTime);
   }
 
+  #destroySender() {
+    clearInterval(this.#senderIntervalId);
+   }
+
   // clears up states
   #clearEvents() {
     this.events = [];
@@ -103,7 +129,7 @@ export default class EventCollector {
 
   // retrieves selector of event target element
   // pushes selector to the array
-  #handleClick(event) {
+  #handleClick = (event) => {
     const selector = DOMPath.xPath(event.target, true);
 
     const clickEvent = {
