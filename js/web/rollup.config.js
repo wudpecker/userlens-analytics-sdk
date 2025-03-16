@@ -1,20 +1,22 @@
 // rollup.config.js
-import resolve from "@rollup/plugin-node-resolve";
+const resolve = require("@rollup/plugin-node-resolve");
+const commonjs = require("@rollup/plugin-commonjs");
 
-export default {
-  input: "src/index.js", // Entry point for your package
+module.exports = {
+  input: "src/index.js",
   output: [
     {
-      file: "dist/userlens.cjs.js", // CommonJS output for Node.js
-      format: "cjs", // Use CommonJS format
-      exports: "default",
+      file: "dist/userlens.cjs.js",
+      format: "cjs",
+      exports: "auto",
     },
     {
-      file: "dist/userlens.esm.js", // ESModule output for browsers
-      format: "esm", // Use ESModule format
+      file: "dist/userlens.esm.js",
+      format: "esm",
     },
   ],
   plugins: [
-    resolve(), // Resolves node modules
+    resolve(),
+    commonjs(), // important to handle commonjs like chrome-dompath
   ],
 };
