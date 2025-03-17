@@ -1,4 +1,5 @@
 import { record as rrwebRecord } from "rrweb";
+import { getRecordConsolePlugin } from '@rrweb/rrweb-plugin-console-record';
 
 export default class SessionRecorder {
   constructor({
@@ -73,6 +74,7 @@ export default class SessionRecorder {
       },
       maskAllInputs: this.maskingOptions.includes("all"),
       maskInputOptions: { password: this.maskingOptions.includes("passwords") },
+      plugins: [getRecordConsolePlugin()],
     });
   }
 
@@ -96,7 +98,6 @@ export default class SessionRecorder {
 
   // save events on session.userlens.io service
   async #trackEvents() {
-    // const compressedPayload = this.#compressData(this.sessionEvents);
     const chunkTimestamp =
       this.sessionEvents[this.sessionEvents?.length - 1]?.timestamp;
     const payload = this.sessionEvents;

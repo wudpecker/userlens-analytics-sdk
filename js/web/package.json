@@ -1,6 +1,6 @@
 {
   "name": "userlens-analytics-sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "dist/userlens.cjs.js",
   "module": "dist/userlens.esm.js",
   "scripts": {
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@rollup/plugin-commonjs": "^28.0.3",
+    "@rrweb/rrweb-plugin-console-record": "^2.0.0-alpha.18",
     "chrome-dompath": "^2.0.1",
     "rrweb": "^2.0.0-alpha.4"
   }
