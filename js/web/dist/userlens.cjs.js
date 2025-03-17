@@ -21283,7 +21283,7 @@ class SessionRecorder {
   constructor({
     WRITE_CODE,
     userId,
-    TIMEOUT = 30 * 60 * 1000,
+    TIMEOUT = 10 * 60 * 1000,
     BUFFER_SIZE = 50,
     maskingOptions = ["passwords"], // "passwords", "all"
   }) {
@@ -21315,7 +21315,7 @@ class SessionRecorder {
     } else {
       this.maskingOptions = ["passwords"];
     }
-    
+
     this.userId = userId;
     this.sessionEvents = [];
 
@@ -21358,7 +21358,6 @@ class SessionRecorder {
 
   #handleEvent(event) {
     this.sessionEvents.push(event);
-    // console.log("this.sessionEvents", this.sessionEvents);
     // update last active in storage
     window.localStorage.setItem("userlensSessionLastActive", event.timestamp);
 
@@ -21371,6 +21370,8 @@ class SessionRecorder {
     window.addEventListener("beforeunload", () => {
       // save events on session.userlens.io service
       this.#trackEvents();
+      window.localStorage.removeItem("userlensSessionUuid");
+      window.localStorage.removeItem("userlensSessionLastActive");
     });
   }
 
@@ -21379,7 +21380,7 @@ class SessionRecorder {
     const chunkTimestamp =
       this.sessionEvents[this.sessionEvents?.length - 1]?.timestamp;
     const payload = this.sessionEvents;
-    
+
     this.#clearEvents();
 
     // add try/retry ?

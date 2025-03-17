@@ -1,11 +1,11 @@
 import { record as rrwebRecord } from "rrweb";
-import { getRecordConsolePlugin } from '@rrweb/rrweb-plugin-console-record';
+import { getRecordConsolePlugin } from "@rrweb/rrweb-plugin-console-record";
 
 export default class SessionRecorder {
   constructor({
     WRITE_CODE,
     userId,
-    TIMEOUT = 30 * 60 * 1000,
+    TIMEOUT = 10 * 60 * 1000,
     BUFFER_SIZE = 50,
     maskingOptions = ["passwords"], // "passwords", "all"
   }) {
@@ -37,7 +37,7 @@ export default class SessionRecorder {
     } else {
       this.maskingOptions = ["passwords"];
     }
-    
+
     this.userId = userId;
     this.sessionEvents = [];
 
@@ -80,7 +80,6 @@ export default class SessionRecorder {
 
   #handleEvent(event) {
     this.sessionEvents.push(event);
-    // console.log("this.sessionEvents", this.sessionEvents);
     // update last active in storage
     window.localStorage.setItem("userlensSessionLastActive", event.timestamp);
 
@@ -93,6 +92,8 @@ export default class SessionRecorder {
     window.addEventListener("beforeunload", () => {
       // save events on session.userlens.io service
       this.#trackEvents();
+      window.localStorage.removeItem("userlensSessionUuid");
+      window.localStorage.removeItem("userlensSessionLastActive");
     });
   }
 
@@ -101,7 +102,7 @@ export default class SessionRecorder {
     const chunkTimestamp =
       this.sessionEvents[this.sessionEvents?.length - 1]?.timestamp;
     const payload = this.sessionEvents;
-    
+
     this.#clearEvents();
 
     // add try/retry ?
