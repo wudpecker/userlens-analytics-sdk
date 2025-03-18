@@ -21366,8 +21366,6 @@ class SessionRecorder {
     window.addEventListener("beforeunload", () => {
       // save events on session.userlens.io service
       this.#trackEvents();
-      window.localStorage.removeItem("userlensSessionUuid");
-      window.localStorage.removeItem("userlensSessionLastActive");
     });
   }
 
