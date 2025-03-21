@@ -659,16 +659,22 @@ class EventCollector {
 
   // constructs a page view event object and pushes it to events, updates localStorage too.
   #trackPageview() {
+    const url = new URL(window.location.href);
+    const referrer = new URL(document.referrer || "");
+
+    // Convert query params to object
+    const queryParams = Object.fromEntries(url.searchParams.entries());
+
     const pageview = {
       event: "pageview",
       properties: {
-        url: window.location.href,
-        referrer: document.referrer,
+        url: url.origin + url.pathname,
+        referrer: referrer.origin + referrer.pathname,
+        query: queryParams,
       },
     };
 
     this.events.push(pageview);
-
     window.localStorage.setItem("userlensEvents", JSON.stringify(this.events));
   }
 
