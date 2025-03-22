@@ -655,23 +655,30 @@ class EventCollector {
 
   // constructs a page view event object and pushes it to events, updates localStorage too.
   #trackPageview() {
-    const url = new URL(window.location.href);
-    const referrer = new URL(document.referrer || "");
+    try {
+      const url = new URL(window.location.href);
+      const referrer = new URL(document.referrer || "");
 
-    // Convert query params to object
-    const queryParams = Object.fromEntries(url.searchParams.entries());
+      // Convert query params to object
+      const queryParams = Object.fromEntries(url.searchParams.entries());
 
-    const pageview = {
-      event: "pageview",
-      properties: {
-        url: url.origin + url.pathname,
-        referrer: referrer.origin + referrer.pathname,
-        query: queryParams,
-      },
-    };
+      const pageview = {
+        event: "pageview",
+        properties: {
+          url: url.origin + url.pathname,
+          referrer: referrer.origin + referrer.pathname,
+          query: queryParams,
+        },
+      };
 
-    this.events.push(pageview);
-    window.localStorage.setItem("userlensEvents", JSON.stringify(this.events));
+      this.events.push(pageview);
+      window.localStorage.setItem(
+        "userlensEvents",
+        JSON.stringify(this.events)
+      );
+    } catch (err) {
+      console.error("Userlens EventCollector error: ", err);
+    }
   }
 
   // detect SPA navigations using history API
