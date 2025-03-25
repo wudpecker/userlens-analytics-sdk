@@ -657,15 +657,22 @@ class EventCollector {
   #trackPageview() {
     try {
       const url = new URL(window.location.href);
+
+      if (
+        url?.hostname === "localhost" ||
+        url?.hostname === "127.0.0.1" ||
+        url?.hostname === "::1"
+      )
+        return;
+
       const referrer = new URL(document.referrer || "");
 
       // Convert query params to object
       const queryParams = Object.fromEntries(url.searchParams.entries());
 
       const pageview = {
-        event: "pageview",
+        event: url?.origin + url?.pathname || "pageview",
         properties: {
-          url: url.origin + url.pathname,
           referrer: referrer.origin + referrer.pathname,
           query: queryParams,
         },
