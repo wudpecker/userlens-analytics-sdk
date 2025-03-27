@@ -665,7 +665,16 @@ class EventCollector {
       )
         return;
 
-      const referrer = new URL(document.referrer || "");
+      let referrer = "";
+      try {
+        if (document.referrer && /^https?:\/\//.test(document.referrer)) {
+          referrer =
+            new URL(document.referrer).origin +
+            new URL(document.referrer).pathname;
+        }
+      } catch (e) {
+        referrer = "";
+      }
 
       // Convert query params to object
       const queryParams = Object.fromEntries(url.searchParams.entries());
@@ -673,7 +682,7 @@ class EventCollector {
       const pageview = {
         event: url?.origin + url?.pathname || "pageview",
         properties: {
-          referrer: referrer.origin + referrer.pathname,
+          referrer,
           query: queryParams,
         },
       };
@@ -684,7 +693,7 @@ class EventCollector {
         JSON.stringify(this.events)
       );
     } catch (err) {
-      console.error("Userlens EventCollector error: ", err);
+      console.warn("Userlens EventCollector error: tracking page view failed");
     }
   }
 
