@@ -1,6 +1,6 @@
 {
   "name": "userlens-analytics-sdk",
-  "version": "0.1.9",
+  "version": "0.1.11",
   "main": "dist/userlens.cjs.js",
   "module": "dist/userlens.esm.js",
   "scripts": {
@@ -12,6 +12,7 @@
   "description": "",
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-terser": "^0.4.4",
     "rollup": "^4.34.6"
   },
   "dependencies": {

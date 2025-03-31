@@ -5,11 +5,11 @@ export default class SessionRecorder {
   constructor({
     WRITE_CODE,
     userId,
-    TIMEOUT = 10 * 60 * 1000,
+    TIMEOUT = 30 * 60 * 1000,
     BUFFER_SIZE = 50,
     maskingOptions = ["passwords"], // "passwords", "all"
   }) {
-    if (window === undefined) {
+    if (typeof window === "undefined") {
       console.error(
         "Userlens EventCollector error: unavailable outside of browser environment."
       );
@@ -68,7 +68,11 @@ export default class SessionRecorder {
 
   // init rrweb recorder
   #initRecorder() {
-    rrwebRecord({
+    if (this.stopRecording) {
+      this.stopRecording();
+    }
+
+    this.stopRecording = rrwebRecord({
       emit: (event) => {
         this.#handleEvent(event);
       },
@@ -79,13 +83,40 @@ export default class SessionRecorder {
   }
 
   #handleEvent(event) {
+    const lastActive = Number(
+      window.localStorage.getItem("userlensSessionLastActive")
+    );
+
+    if (lastActive) {
+      const now = Date.now();
+
+      if (now - lastActive > this.TIMEOUT) {
+        this.#handleInactivity();
+      }
+    }
+
     this.sessionEvents.push(event);
-    // update last active in storage
     window.localStorage.setItem("userlensSessionLastActive", event.timestamp);
 
     if (this.sessionEvents.length >= this.BUFFER_SIZE) {
       this.#trackEvents();
     }
+  }
+
+  #handleInactivity() {
+    if (this.sessionEvents.length > 0) {
+      this.#trackEvents();
+    }
+
+    if (this.stopRecording) {
+      this.stopRecording();
+    }
+
+    localStorage.removeItem("userlensSessionUuid");
+    localStorage.removeItem("userlensSessionLastActive");
+
+    this.#createSession();
+    this.#initRecorder();
   }
 
   #initUnloadListener() {
@@ -103,7 +134,6 @@ export default class SessionRecorder {
 
     this.#clearEvents();
 
-    // add try/retry ?
     await fetch(`https://sessions.userlens.io/session/${this.sessionUuid}`, {
       method: "POST",
       headers: {

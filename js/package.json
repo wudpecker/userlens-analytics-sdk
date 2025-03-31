@@ -10,5 +10,8 @@
     "build": "pnpm -r run build",
     "test": "pnpm -r run test"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
+    "rollup-plugin-terser": "^7.0.2"
+  }
 }
