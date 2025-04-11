@@ -137,9 +137,20 @@ export default class EventCollector {
 
     const clickEvent = {
       event: selector,
+      is_raw: true,
     };
 
     this.events.push(clickEvent);
+    window.localStorage.setItem("userlensEvents", JSON.stringify(this.events));
+  }
+
+  pushEvent(event) {
+    const eventToPush = {
+      ...event,
+      is_raw: false,
+    };
+
+    this.events.push(eventToPush);
     window.localStorage.setItem("userlensEvents", JSON.stringify(this.events));
   }
 }
