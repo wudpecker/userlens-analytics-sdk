@@ -6,12 +6,12 @@ export default class SessionRecorder {
     WRITE_CODE,
     userId,
     TIMEOUT = 30 * 60 * 1000,
-    BUFFER_SIZE = 50,
+    BUFFER_SIZE = 10,
     maskingOptions = ["passwords"], // "passwords", "all"
   }) {
     if (typeof window === "undefined") {
       console.error(
-        "Userlens EventCollector error: unavailable outside of browser environment."
+        "Userlens SDK error: unavailable outside of browser environment."
       );
     }
 
