@@ -257,3 +257,22 @@ app.post("/track-events", async (req, res) => {
 
 app.listen(3000, () => console.log("Server running on port 3000"));
 ```
+
+## Session Replay (SessionRecorder)
+The `SessionRecorder` captures full user sessions (mouse moves, clicks, scrolls, etc.) automatically as soon as it’s instantiated.
+
+### Configuration
+- **WRITE_CODE**: Your project write key which can be found in settings on app.userlens.io 
+- **userId**: A unique identifier for the user (e.g. their email or internal user ID).
+
+### Usage
+```js
+import { SessionRecorder } from "userlens-analytics-sdk";
+
+new SessionRecorder({
+  WRITE_CODE: "your_write_code",
+  userId: "your_identified_user_id",
+});
+```
+
+
