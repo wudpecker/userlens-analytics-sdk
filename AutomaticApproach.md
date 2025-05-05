@@ -35,6 +35,12 @@ First, make sure to install the package on your frontend project.
 npm i userlens-analytics-sdk
 ```
 
+Alternatively, you can include UMD build script from CDN.
+```html
+<script src="https://unpkg.com/userlens-analytics-sdk@0.1.13/dist/userlens.umd.js"></script>
+```
+After that, all SDK exports are available on the global Userlens object.
+
 ## Client Side
 ### Import
 Import and initialize `EventCollector`:
