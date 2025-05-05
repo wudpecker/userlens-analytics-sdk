@@ -14,6 +14,7 @@
   - [Server Side](#server-side)
     - [Django Rest Framework](#django-rest-framework)
     - [Express.js](#expressjs)
+- [Session Replay](#session-replay)
      
 # Introduction
 We offer a lightweight and flexible event tracking SDK designed to give you full control over how you collect and forward user events. Whether you prefer a fire-and-forget approach or need granular control over each event, we've got you covered. The package is framework agnostic and can be used within any frontend project as well as in pure JavaScript.
@@ -258,7 +259,7 @@ app.post("/track-events", async (req, res) => {
 app.listen(3000, () => console.log("Server running on port 3000"));
 ```
 
-## Session Replay (SessionRecorder)
+## Session Replay
 The `SessionRecorder` captures full user sessions (mouse moves, clicks, scrolls, etc.) automatically as soon as it’s instantiated.
 
 ### Configuration
