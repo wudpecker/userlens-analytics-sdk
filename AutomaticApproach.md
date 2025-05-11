@@ -14,6 +14,7 @@
   - [Server Side](#server-side)
     - [Django Rest Framework](#django-rest-framework)
     - [Express.js](#expressjs)
+- [Session Replay](#session-replay)
      
 # Introduction
 We offer a lightweight and flexible event tracking SDK designed to give you full control over how you collect and forward user events. Whether you prefer a fire-and-forget approach or need granular control over each event, we've got you covered. The package is framework agnostic and can be used within any frontend project as well as in pure JavaScript.
@@ -34,6 +35,12 @@ First, make sure to install the package on your frontend project.
 ```sh
 npm i userlens-analytics-sdk
 ```
+
+Alternatively, you can include UMD build script from CDN.
+```html
+<script src="https://unpkg.com/userlens-analytics-sdk@0.1.13/dist/userlens.umd.js"></script>
+```
+After that, all SDK exports are available on the global Userlens object.
 
 ## Client Side
 ### Import
@@ -251,3 +258,22 @@ app.post("/track-events", async (req, res) => {
 
 app.listen(3000, () => console.log("Server running on port 3000"));
 ```
+
+## Session Replay
+The `SessionRecorder` captures full user sessions (mouse moves, clicks, scrolls, etc.) automatically as soon as it’s instantiated.
+
+### Configuration
+- **WRITE_CODE**: Your project write key which can be found in settings on app.userlens.io 
+- **userId**: A unique identifier for the user (e.g. their email or internal user ID).
+
+### Usage
+```js
+import { SessionRecorder } from "userlens-analytics-sdk";
+
+new SessionRecorder({
+  WRITE_CODE: "your_write_code",
+  userId: "your_identified_user_id",
+});
+```
+
+

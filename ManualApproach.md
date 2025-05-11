@@ -50,6 +50,12 @@ The best way to implement analytics with Userlens.js is on the server side. We s
 npm install userlens-analytics-sdk-node
 ```
 
+Alternatively, you can include UMD build script from CDN.
+```html
+<script src="https://unpkg.com/userlens-analytics-sdk@0.1.13/dist/userlens.umd.js"></script>
+```
+After that, all SDK exports are available on the global Userlens object.
+
 ## Usage
 
 ### Importing the SDK
