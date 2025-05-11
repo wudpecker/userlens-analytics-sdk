@@ -2,13 +2,9 @@ import { record as rrwebRecord } from "rrweb";
 import { getRecordConsolePlugin } from "@rrweb/rrweb-plugin-console-record";
 
 export default class SessionRecorder {
-  constructor({
-    WRITE_CODE,
-    userId,
-    TIMEOUT = 30 * 60 * 1000,
-    BUFFER_SIZE = 10,
-    maskingOptions = ["passwords"], // "passwords", "all"
-  }) {
+  #trackEventsThrottled;
+
+  constructor({ WRITE_CODE, userId, recordingOptions = {} }) {
     if (typeof window === "undefined") {
       console.error(
         "Userlens SDK error: unavailable outside of browser environment."
@@ -21,58 +17,39 @@ export default class SessionRecorder {
       );
     }
 
-    this.WRITE_CODE = btoa(`${WRITE_CODE}:`);
-
     if (!userId?.trim() || typeof userId !== "string") {
       console.error(
         "Userlens SDK Error: userId is required to identify session user."
       );
     }
 
-    this.TIMEOUT = TIMEOUT; // default 30 minutes
-    this.BUFFER_SIZE = BUFFER_SIZE; // default 30 events
+    const {
+      TIMEOUT = 30 * 60 * 1000,
+      BUFFER_SIZE = 10,
+      maskingOptions = ["passwords"],
+    } = recordingOptions;
 
-    if (Array.isArray(maskingOptions)) {
-      this.maskingOptions = maskingOptions;
-    } else {
-      this.maskingOptions = ["passwords"];
-    }
-
+    this.WRITE_CODE = btoa(`${WRITE_CODE}:`);
     this.userId = userId;
+    this.TIMEOUT = TIMEOUT;
+    this.BUFFER_SIZE = BUFFER_SIZE;
+    this.maskingOptions = maskingOptions;
+
     this.sessionEvents = [];
 
-    const lastActive = window.localStorage.getItem("userlensSessionLastActive");
-
-    // make sure lastActive is a timestamp number
-    if (!isNaN(Number(lastActive))) {
-      // get difference in time
-      const differenceInTime = Date.now() - lastActive;
-      // get sessionUuid from storage
-      const sessionUuidInStorage = window.localStorage.getItem(
-        "userlensSessionUuid"
-      );
-
-      // if sessionUuid is not present in storage OR session expired => create new session
-      if (!sessionUuidInStorage || differenceInTime > this.TIMEOUT) {
-        // create new session (generate uuid + save in local storage)
-        this.#createSession();
-      } else {
-        // else use session uuid from local storage
-        this.sessionUuid = sessionUuidInStorage;
-      }
-    }
+    this.#trackEventsThrottled = this.#throttle(() => {
+      this.#trackEvents();
+    }, 5000);
 
     this.#initRecorder();
-    this.#initUnloadListener();
   }
 
-  // init rrweb recorder
   #initRecorder() {
-    if (this.stopRecording) {
-      this.stopRecording();
-    }
+    if (this.rrwebControl) return;
 
-    this.stopRecording = rrwebRecord({
+    this.#createSession();
+
+    this.rrwebControl = rrwebRecord({
       emit: (event) => {
         this.#handleEvent(event);
       },
@@ -80,82 +57,74 @@ export default class SessionRecorder {
       maskInputOptions: { password: this.maskingOptions.includes("passwords") },
       plugins: [getRecordConsolePlugin()],
     });
+
+    this.#initFocusListener();
+  }
+
+  #initFocusListener() {
+    window.addEventListener("visibilitychange", () => {
+      if (document.visibilityState) {
+        takeFullSnapshot();
+      }
+    });
+  }
+
+  #throttle(func, delay) {
+    let lastCall = 0;
+    return function (...args) {
+      const now = Date.now();
+
+      if (now - lastCall >= delay) {
+        lastCall = now;
+        func.apply(this, args);
+      }
+    };
   }
 
   #handleEvent(event) {
+    const now = Date.now();
     const lastActive = Number(
-      window.localStorage.getItem("userlensSessionLastActive")
+      localStorage.getItem("userlensSessionLastActive")
     );
 
-    if (lastActive) {
-      const now = Date.now();
-
-      if (now - lastActive > this.TIMEOUT) {
-        this.#handleInactivity();
-      }
+    // check inactivity timeout
+    if (lastActive && now - lastActive > this.TIMEOUT) {
+      this.#resetSession();
     }
 
+    localStorage.setItem("userlensSessionLastActive", now);
+
     this.sessionEvents.push(event);
-    window.localStorage.setItem("userlensSessionLastActive", event.timestamp);
 
     if (this.sessionEvents.length >= this.BUFFER_SIZE) {
-      this.#trackEvents();
+      this.#trackEventsThrottled();
     }
   }
 
-  #handleInactivity() {
-    if (this.sessionEvents.length > 0) {
-      this.#trackEvents();
-    }
-
-    if (this.stopRecording) {
-      this.stopRecording();
-    }
-
+  #resetSession() {
     localStorage.removeItem("userlensSessionUuid");
     localStorage.removeItem("userlensSessionLastActive");
 
     this.#createSession();
-    this.#initRecorder();
   }
 
-  #initUnloadListener() {
-    window.addEventListener("beforeunload", () => {
-      // save events on session.userlens.io service
-      this.#trackEvents();
-    });
-  }
-
-  // save events on session.userlens.io service
-  async #trackEvents() {
-    const chunkTimestamp =
-      this.sessionEvents[this.sessionEvents?.length - 1]?.timestamp;
-    const payload = this.sessionEvents;
-
-    this.#clearEvents();
-
-    await fetch(`https://sessions.userlens.io/session/${this.sessionUuid}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${this.WRITE_CODE}`,
-      },
-      body: JSON.stringify({
-        userId: this.userId,
-        chunk_timestamp: chunkTimestamp,
-        payload: payload,
-      }),
-    });
-  }
-
-  #clearEvents() {
-    this.sessionEvents = [];
-  }
-
-  // create sessionUuid, save to local storage
   #createSession() {
-    this.sessionUuid = this.#generateSessionUuid();
-    window.localStorage.setItem("userlensSessionUuid", this.sessionUuid);
+    const lastActive = Number(
+      localStorage.getItem("userlensSessionLastActive")
+    );
+    const storedUuid = localStorage.getItem("userlensSessionUuid");
+
+    const now = Date.now();
+    const isExpired = !lastActive || now - lastActive > this.TIMEOUT;
+
+    if (!storedUuid || isExpired) {
+      this.sessionUuid = this.#generateSessionUuid();
+      localStorage.setItem("userlensSessionUuid", this.sessionUuid);
+    } else {
+      this.sessionUuid = storedUuid;
+    }
+
+    localStorage.setItem("userlensSessionLastActive", now);
   }
 
   #generateSessionUuid() {
@@ -165,5 +134,34 @@ export default class SessionRecorder {
         (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))
       ).toString(16)
     );
+  }
+
+  async #trackEvents() {
+    const chunkTimestamp =
+      this.sessionEvents[this.sessionEvents.length - 1]?.timestamp;
+
+    const payload = [...this.sessionEvents];
+    this.#clearEvents();
+
+    try {
+      await fetch(`https://sessions.userlens.io/session/${this.sessionUuid}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${this.WRITE_CODE}`,
+        },
+        body: JSON.stringify({
+          userId: this.userId,
+          chunk_timestamp: chunkTimestamp,
+          payload,
+        }),
+      });
+    } catch (err) {
+      console.error("Userlens SDK: Failed to send session events:", err);
+    }
+  }
+
+  #clearEvents() {
+    this.sessionEvents = [];
   }
 }
