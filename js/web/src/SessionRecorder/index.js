@@ -1,4 +1,4 @@
-import { record as rrwebRecord } from "rrweb";
+import { record as rrwebRecord, takeFullSnapshot } from "rrweb";
 import { getRecordConsolePlugin } from "@rrweb/rrweb-plugin-console-record";
 
 export default class SessionRecorder {
