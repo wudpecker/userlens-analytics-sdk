@@ -53,6 +53,9 @@ import EventCollector from "userlens-analytics-sdk/src/EventCollector";
 ### Create API call function
 Create a function that is going to receive a payload with events and send it to your API endpoint.
 
+<details open>
+<summary>React / JavaScript</summary>
+
 ```javascript
 export const trackEvents = (payload) => {
   return new Promise((resolve, reject) => {
@@ -72,10 +75,45 @@ export const trackEvents = (payload) => {
   })
 }
 ```
+</details> 
+
+<details> <summary>Angular / TypeScript</summary>
+
+```typescript
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AnalyticsService {
+  private apiUrl = 'https://your.backend.io/events';
+
+  constructor(private http: HttpClient) {}
+
+  trackEvents(payload: any): Promise<any> {
+    const headers = new HttpHeaders({
+      'Authorization': 'JWT <user_auth_token>'
+    });
+
+    return firstValueFrom(
+      this.http.post(this.apiUrl, payload, { headers })
+    ).catch(error => {
+      console.log('error', error);
+      throw error;
+    });
+  }
+}
+```
+</details> 
 
 ### Initialize 
 The best way to initialize `EventCollector` will vary depending on your frontend set up. In a React/NextJS project you would initialize it on client side in your project layout. In this example we present how we are implementing `EventCollector` on our frontend.
 
+<details open>
+<summary>React / NextJS</summary>
+  
 ```javascript
 // Route Protected layout (for authenticated users)
 // app/(navigation)/layout.js
@@ -128,6 +166,52 @@ export default function layout({ children }) {
   );
 }
 ```
+</details> 
+
+<details> <summary>Angular</summary>
+
+```typescript
+// Protected layout (for authenticated users)
+// layout.component.ts
+
+import { Component, OnInit } from '@angular/core';
+import EventCollector from 'userlens-analytics-sdk/src/EventCollector';
+import { AnalyticsService } from '../services/analytics.service';
+
+@Component({
+  selector: 'app-layout',
+  template: `
+    <div class="w-[100vw] h-[100vh] flex bg-orange-50 text-neutral-700">
+      <app-sidebar></app-sidebar>
+      <main class="bg-white flex-1 my-3 mr-3 relative rounded-xl border shadow-light border-neutral-100 overflow-y-auto p-8">
+        <ng-content></ng-content>
+      </main>
+    </div>
+  `
+})
+export class LayoutComponent implements OnInit {
+  constructor(private analytics: AnalyticsService) {}
+
+  ngOnInit() {
+    // Initialize EventCollector once when the component mounts
+    new EventCollector((events: any) => {
+      this.analytics.trackEvents({
+        payload: {
+          events: events
+        }
+      })
+      .then((response) => {
+        console.log(response);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    });
+  }
+}
+```
+</details> 
+
 
 ### EventCollector Constructor Parameters
 
@@ -275,5 +359,3 @@ new SessionRecorder({
   userId: "your_identified_user_id",
 });
 ```
-
-
