@@ -315,6 +315,92 @@ The event will be added to the queue and included in the next batch of events pa
 
 </details>
 
+<details> <summary>Angular</summary>
+
+To make EventCollector available across your Angular app, the recommended approach is to wrap it in a global service and inject that service into any component that needs to track events.
+
+```typescript
+// src/app/userlens.service.ts
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import * as SDK from 'userlens-analytics-sdk';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class UserlensService {
+  private collector: any;
+  private apiUrl = 'https://your.backend.io/events'; // ← replace with your actual endpoint
+  private authToken = '<user_auth_token>'; // optionally inject this dynamically later
+
+  constructor(private http: HttpClient) {
+    const EventCollector = SDK.EventCollector;
+
+    this.collector = new EventCollector((events: any[]) => {
+      this.sendToBackend({ payload: { events } })
+        .then((res) => console.log('[UserlensService] Events sent:', res))
+        .catch((err) => console.error('[UserlensService] Failed to send events:', err));
+    });
+  }
+
+  pushEvent(event: any): void {
+    this.collector?.pushEvent(event);
+  }
+
+  private async sendToBackend(payload: any): Promise<any> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      Authorization: `JWT ${this.authToken}`,
+    });
+
+    return this.http.post(this.apiUrl, payload, { headers }).toPromise();
+  }
+}
+```
+
+This service initializes EventCollector, batches captured events, and sends them to your backend via HttpClient. You can also expose methods like pushEvent() to manually track interactions from any component.
+
+Use it in your component:
+```typescript
+// src/app/app-button/app-button.component.ts
+import { Component, Input } from '@angular/core';
+import { UserlensService } from '../userlens.service';
+
+@Component({
+  selector: 'app-button',
+  standalone: true,
+  templateUrl: './app-button.html',
+  styleUrl: './app-button.css',
+})
+export class AppButton {
+  @Input() label = 'Click me';
+
+  constructor(private userlens: UserlensService) {}
+
+  handleClick(): void {
+    this.userlens.pushEvent({
+      event: 'button_click',
+      properties: {
+        label: this.label,
+        timestamp: Date.now(),
+      },
+    });
+  }
+}
+```
+
+Your template:
+```html
+<!-- src/app/app-button/app-button.html -->
+<button (click)="handleClick()">
+  {{ label }}
+</button>
+```
+
+The event will be added to the queue and included in the next batch of events passed to the callback provided during `EventCollector` initialization.
+
+</details>
+
 ### EventCollector Constructor Parameters
 
 | Parameter     | Type      | Default  | Description |
