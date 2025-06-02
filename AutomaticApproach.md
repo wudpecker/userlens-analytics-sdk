@@ -311,6 +311,8 @@ export default function CoolButton() {
 }
 ```
 
+The event will be added to the queue and included in the next batch of events passed to the callback provided during `EventCollector` initialization.
+
 </details>
 
 ### EventCollector Constructor Parameters
