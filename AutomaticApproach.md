@@ -284,7 +284,35 @@ export const useUserlens = () => {
   return useContext(UserlensContext);
 };
 ```
+
+Then, import the hook and call the method when needed.
+
+```javascript
+import { useUserlens } from "@/providers/UserlensSDK";
+
+export default function CoolButton() {
+  const { collector } = useUserlens();  
+
+  const handleButtonClick = () => {
+    console.log("button clicked")
+    collector.pushEvent({
+      event: "cool_button_clicked",
+      properties: {
+        color: "blue"
+      }
+    })
+  }
+
+  return (
+    <button className="bg-blue-500" onClick={handleButtonClick}>
+      Click me
+    </button>
+  );
+}
+```
+
 </details>
+
 ### EventCollector Constructor Parameters
 
 | Parameter     | Type      | Default  | Description |
