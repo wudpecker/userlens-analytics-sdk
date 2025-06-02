@@ -234,6 +234,7 @@ collector.pushEvent({
 To enable manual event tracking across your app, you should set up a way to access EventCollector methods from any component — typically by providing it from your root layout or through a global service.
 <details open>
 <summary>React / NextJS</summary>
+  
 ```javascript
 import { createContext, useEffect, useState, useContext } from "react";
 
@@ -247,7 +248,41 @@ import { EventCollector } from "userlens-analytics-sdk";
 
 export const UserlensContext = createContext();
 
+export default function UserlensProvider({ children }) {
+  const [collector, setCollector] = useState(null);
 
+  // select user from global store
+  const user = useInfoStore((state) => state.user);
+
+  useEffect(() => {
+    const collector = new EventCollector((events) => {
+      trackEvents({
+        payload: {
+          events: events,
+        },
+      })
+        .then((response) => {
+          // console.log(response);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    });
+
+    setCollector(collector);
+  }, []);
+
+  return (
+    <UserlensContext.Provider value={{ collector }}>
+      {children}
+    </UserlensContext.Provider>
+  );
+}
+
+// export context as a hook
+export const useUserlens = () => {
+  return useContext(UserlensContext);
+};
 ```
 </details>
 ### EventCollector Constructor Parameters
