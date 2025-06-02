@@ -317,7 +317,7 @@ The event will be added to the queue and included in the next batch of events pa
 
 <details> <summary>Angular</summary>
 
-To make EventCollector available across your Angular app, the recommended approach is to wrap it in a global service and inject that service into any component that needs to track events.
+To make `EventCollector` available across your Angular app, the recommended approach is to wrap it in a global service and inject that service into any component that needs to track events.
 
 ```typescript
 // src/app/userlens.service.ts
@@ -358,7 +358,7 @@ export class UserlensService {
 }
 ```
 
-This service initializes EventCollector, batches captured events, and sends them to your backend via HttpClient. You can also expose methods like pushEvent() to manually track interactions from any component.
+This service initializes `EventCollector`, batches captured events, and sends them to your backend via `HttpClient`. Additionally you need to expose `pushEvent()` method to manually track interactions from any component.
 
 Use it in your component:
 ```typescript
