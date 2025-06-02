@@ -108,7 +108,7 @@ export class AnalyticsService {
 ```
 </details> 
 
-### Initialize 
+### Initialize Automatic EventCollector
 The best way to initialize `EventCollector` will vary depending on your frontend set up. In a React/NextJS project you would initialize it on client side in your project layout. In this example we present how we are implementing `EventCollector` on our frontend.
 
 <details open>
@@ -175,7 +175,7 @@ export default function layout({ children }) {
 // layout.component.ts
 
 import { Component, OnInit } from '@angular/core';
-import EventCollector from 'userlens-analytics-sdk/src/EventCollector';
+import * as SDK from 'userlens-analytics-sdk';
 import { AnalyticsService } from '../services/analytics.service';
 
 @Component({
@@ -212,7 +212,78 @@ export class LayoutComponent implements OnInit {
 ```
 </details> 
 
+### Track Events Manually
+If you want to manually track specific events, EventCollector provides a `pushEvent` method that accepts a custom event object.
 
+Basic usage example:
+```javascript
+const collector = EventCollector((events) => {
+  // process events as you wish
+})
+
+collector.pushEvent({
+  // pass event_name like this
+  event: "add_to_collection_btn_clicked",
+  // optionally pass properties
+  properties: {
+    collection_name: "New Collection" 
+  }
+})
+```
+
+To enable manual event tracking across your app, you should set up a way to access EventCollector methods from any component — typically by providing it from your root layout or through a global service.
+<details open>
+<summary>React / NextJS</summary>
+```javascript
+import { createContext, useEffect, useState, useContext } from "react";
+
+// global store
+import { useInfoStore } from "@/infostore";
+
+// API call function
+import { trackEvents } from "@/services/events";
+
+import { EventCollector } from "userlens-analytics-sdk";
+
+export const UserlensContext = createContext();
+
+export default function UserlensProvider({ children }) {
+  const [collector, setCollector] = useState(null);
+
+  // select user from global store
+  const user = useInfoStore((state) => state.user);
+
+  useEffect(() => {
+    const collector = new EventCollector((events) => {
+      trackEvents({
+        payload: {
+          events: events,
+        },
+      })
+        .then((response) => {
+          // console.log(response);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    });
+
+    setCollector(collector);
+  }, []);
+
+  return (
+    <UserlensContext.Provider value={{ collector }}>
+      {children}
+    </UserlensContext.Provider>
+  );
+}
+
+// export context as a hook
+export const useUserlens = () => {
+  return useContext(UserlensContext);
+};
+```
+</details>
 ### EventCollector Constructor Parameters
 
 | Parameter     | Type      | Default  | Description |
