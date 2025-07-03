@@ -1,10 +1,10 @@
-// rollup.config.js
 const resolve = require("@rollup/plugin-node-resolve");
 const commonjs = require("@rollup/plugin-commonjs");
-const terser = require("@rollup/plugin-terser");
+const { terser } = require("@rollup/plugin-terser");
+const typescript = require("rollup-plugin-typescript2");
 
 module.exports = {
-  input: "src/index.js",
+  input: "src/index.ts",
   output: [
     {
       file: "dist/userlens.cjs.js",
@@ -23,7 +23,12 @@ module.exports = {
   ],
   plugins: [
     resolve(),
-    commonjs(), // important to handle commonjs like chrome-dompath
+    commonjs(),
+    typescript({
+      tsconfig: "./tsconfig.json",
+      clean: true,
+      useTsconfigDeclarationDir: true,
+    }),
     terser(),
   ],
 };
