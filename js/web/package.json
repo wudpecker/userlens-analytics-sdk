@@ -1,8 +1,9 @@
 {
   "name": "userlens-analytics-sdk",
-  "version": "0.1.15",
+  "version": "0.1.18",
   "main": "dist/userlens.cjs.js",
   "module": "dist/userlens.esm.js",
+  "types": "dist/types/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rollup -c"
@@ -20,6 +21,7 @@
     "@rollup/plugin-commonjs": "^28.0.3",
     "@rrweb/rrweb-plugin-console-record": "^2.0.0-alpha.18",
     "chrome-dompath": "^2.0.1",
+    "rollup-plugin-typescript2": "^0.36.0",
     "rrweb": "^2.0.0-alpha.4"
   }
 }

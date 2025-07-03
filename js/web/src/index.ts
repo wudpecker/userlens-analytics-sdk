@@ -1,4 +1,12 @@
-import EventCollector from "./EventCollector";
-import SessionRecorder from "./SessionRecorder";
+export { default as SessionRecorder } from "./SessionRecorder";
+export { default as EventCollector } from "./EventCollector";
 
-export { SessionRecorder, EventCollector };
+export type {
+  SessionRecorderConfig,
+  SessionRecordingOptions,
+  DOMSnapshotNode,
+  RawEvent,
+  PageViewEvent,
+  PushedEvent,
+  MaskingOption,
+} from "./types";

@@ -1,23 +1,39 @@
 import { record as rrwebRecord, takeFullSnapshot } from "rrweb";
+import type { eventWithTime } from "rrweb";
 import { getRecordConsolePlugin } from "@rrweb/rrweb-plugin-console-record";
 
+import { generateUuid } from "../utils";
+
+import { MaskingOption, SessionRecorderConfig } from "../types";
+
 export default class SessionRecorder {
+  private WRITE_CODE!: string;
+  private userId!: string;
+  private TIMEOUT!: number;
+  private BUFFER_SIZE!: number;
+  private maskingOptions!: MaskingOption[];
+  private sessionUuid!: string;
+  private sessionEvents: eventWithTime[] = [];
+  private rrwebControl: ReturnType<typeof rrwebRecord> | null = null;
+
   #trackEventsThrottled;
 
-  constructor({ WRITE_CODE, userId, recordingOptions = {} }) {
+  constructor({
+    WRITE_CODE,
+    userId,
+    recordingOptions = {},
+  }: SessionRecorderConfig) {
     if (typeof window === "undefined") {
       console.error(
         "Userlens SDK error: unavailable outside of browser environment."
       );
     }
-
-    if (!WRITE_CODE?.trim() || typeof WRITE_CODE !== "string") {
+    if (!WRITE_CODE?.trim()) {
       throw new Error(
         "Userlens SDK Error: WRITE_CODE is required and must be a string"
       );
     }
-
-    if (!userId?.trim() || typeof userId !== "string") {
+    if (!userId?.trim()) {
       console.error(
         "Userlens SDK Error: userId is required to identify session user."
       );
@@ -29,7 +45,7 @@ export default class SessionRecorder {
       maskingOptions = ["passwords"],
     } = recordingOptions;
 
-    this.WRITE_CODE = btoa(`${WRITE_CODE}:`);
+    this.WRITE_CODE = WRITE_CODE;
     this.userId = userId;
     this.TIMEOUT = TIMEOUT;
     this.BUFFER_SIZE = BUFFER_SIZE;
@@ -61,27 +77,7 @@ export default class SessionRecorder {
     this.#initFocusListener();
   }
 
-  #initFocusListener() {
-    window.addEventListener("visibilitychange", () => {
-      if (document.visibilityState) {
-        takeFullSnapshot();
-      }
-    });
-  }
-
-  #throttle(func, delay) {
-    let lastCall = 0;
-    return function (...args) {
-      const now = Date.now();
-
-      if (now - lastCall >= delay) {
-        lastCall = now;
-        func.apply(this, args);
-      }
-    };
-  }
-
-  #handleEvent(event) {
+  #handleEvent(event: eventWithTime) {
     const now = Date.now();
     const lastActive = Number(
       localStorage.getItem("userlensSessionLastActive")
@@ -92,7 +88,7 @@ export default class SessionRecorder {
       this.#resetSession();
     }
 
-    localStorage.setItem("userlensSessionLastActive", now);
+    localStorage.setItem("userlensSessionLastActive", now.toString());
 
     this.sessionEvents.push(event);
 
@@ -118,22 +114,36 @@ export default class SessionRecorder {
     const isExpired = !lastActive || now - lastActive > this.TIMEOUT;
 
     if (!storedUuid || isExpired) {
-      this.sessionUuid = this.#generateSessionUuid();
+      this.sessionUuid = generateUuid();
       localStorage.setItem("userlensSessionUuid", this.sessionUuid);
     } else {
       this.sessionUuid = storedUuid;
     }
 
-    localStorage.setItem("userlensSessionLastActive", now);
+    localStorage.setItem("userlensSessionLastActive", now.toString());
   }
 
-  #generateSessionUuid() {
-    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) =>
-      (
-        c ^
-        (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))
-      ).toString(16)
-    );
+  #initFocusListener() {
+    window.addEventListener("visibilitychange", () => {
+      if (document.visibilityState) {
+        takeFullSnapshot();
+      }
+    });
+  }
+
+  #throttle<T extends (...args: any[]) => void>(
+    func: T,
+    delay: number
+  ): (...args: Parameters<T>) => void {
+    let lastCall = 0;
+    return (...args: Parameters<T>) => {
+      const now = Date.now();
+
+      if (now - lastCall >= delay) {
+        lastCall = now;
+        func.apply(this, args);
+      }
+    };
   }
 
   async #trackEvents() {
