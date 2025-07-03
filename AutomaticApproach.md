@@ -53,6 +53,9 @@ import EventCollector from "userlens-analytics-sdk/src/EventCollector";
 ### Create API call function
 Create a function that is going to receive a payload with events and send it to your API endpoint.
 
+<details open>
+<summary>React / JavaScript</summary>
+
 ```javascript
 export const trackEvents = (payload) => {
   return new Promise((resolve, reject) => {
@@ -72,10 +75,45 @@ export const trackEvents = (payload) => {
   })
 }
 ```
+</details> 
 
-### Initialize 
+<details> <summary>Angular / TypeScript</summary>
+
+```typescript
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AnalyticsService {
+  private apiUrl = 'https://your.backend.io/events';
+
+  constructor(private http: HttpClient) {}
+
+  trackEvents(payload: any): Promise<any> {
+    const headers = new HttpHeaders({
+      'Authorization': 'JWT <user_auth_token>'
+    });
+
+    return firstValueFrom(
+      this.http.post(this.apiUrl, payload, { headers })
+    ).catch(error => {
+      console.log('error', error);
+      throw error;
+    });
+  }
+}
+```
+</details> 
+
+### Initialize Automatic EventCollector
 The best way to initialize `EventCollector` will vary depending on your frontend set up. In a React/NextJS project you would initialize it on client side in your project layout. In this example we present how we are implementing `EventCollector` on our frontend.
 
+<details open>
+<summary>React / NextJS</summary>
+  
 ```javascript
 // Route Protected layout (for authenticated users)
 // app/(navigation)/layout.js
@@ -128,6 +166,240 @@ export default function layout({ children }) {
   );
 }
 ```
+</details> 
+
+<details> <summary>Angular</summary>
+
+```typescript
+// Protected layout (for authenticated users)
+// layout.component.ts
+
+import { Component, OnInit } from '@angular/core';
+import * as SDK from 'userlens-analytics-sdk';
+import { AnalyticsService } from '../services/analytics.service';
+
+@Component({
+  selector: 'app-layout',
+  template: `
+    <div class="w-[100vw] h-[100vh] flex bg-orange-50 text-neutral-700">
+      <app-sidebar></app-sidebar>
+      <main class="bg-white flex-1 my-3 mr-3 relative rounded-xl border shadow-light border-neutral-100 overflow-y-auto p-8">
+        <ng-content></ng-content>
+      </main>
+    </div>
+  `
+})
+export class LayoutComponent implements OnInit {
+  constructor(private analytics: AnalyticsService) {}
+
+  ngOnInit() {
+    // Initialize EventCollector once when the component mounts
+    new EventCollector((events: any) => {
+      this.analytics.trackEvents({
+        payload: {
+          events: events
+        }
+      })
+      .then((response) => {
+        console.log(response);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    });
+  }
+}
+```
+</details> 
+
+### Track Events Manually
+If you want to manually track specific events, EventCollector provides a `pushEvent` method that accepts a custom event object.
+
+Basic usage example:
+```javascript
+const collector = EventCollector((events) => {
+  // process events as you wish
+})
+
+collector.pushEvent({
+  // pass event_name like this
+  event: "add_to_collection_btn_clicked",
+  // optionally pass properties
+  properties: {
+    collection_name: "New Collection" 
+  }
+})
+```
+
+To enable manual event tracking across your app, you should set up a way to access EventCollector methods from any component — typically by providing it from your root layout or through a global service.
+<details open>
+<summary>React / NextJS</summary>
+  
+```javascript
+import { createContext, useEffect, useState, useContext } from "react";
+
+// global store
+import { useInfoStore } from "@/infostore";
+
+// API call function
+import { trackEvents } from "@/services/events";
+
+import { EventCollector } from "userlens-analytics-sdk";
+
+export const UserlensContext = createContext();
+
+export default function UserlensProvider({ children }) {
+  const [collector, setCollector] = useState(null);
+
+  // select user from global store
+  const user = useInfoStore((state) => state.user);
+
+  useEffect(() => {
+    const collector = new EventCollector((events) => {
+      trackEvents({
+        payload: {
+          events: events,
+        },
+      })
+        .then((response) => {
+          // console.log(response);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    });
+
+    setCollector(collector);
+  }, []);
+
+  return (
+    <UserlensContext.Provider value={{ collector }}>
+      {children}
+    </UserlensContext.Provider>
+  );
+}
+
+// export context as a hook
+export const useUserlens = () => {
+  return useContext(UserlensContext);
+};
+```
+
+Then, import the hook and call the method when needed.
+
+```javascript
+import { useUserlens } from "@/providers/UserlensSDK";
+
+export default function CoolButton() {
+  const { collector } = useUserlens();  
+
+  const handleButtonClick = () => {
+    console.log("button clicked")
+    collector.pushEvent({
+      event: "cool_button_clicked",
+      properties: {
+        color: "blue"
+      }
+    })
+  }
+
+  return (
+    <button className="bg-blue-500" onClick={handleButtonClick}>
+      Click me
+    </button>
+  );
+}
+```
+
+The event will be added to the queue and included in the next batch of events passed to the callback provided during `EventCollector` initialization.
+
+</details>
+
+<details> <summary>Angular</summary>
+
+To make `EventCollector` available across your Angular app, the recommended approach is to wrap it in a global service and inject that service into any component that needs to track events.
+
+```typescript
+// src/app/userlens.service.ts
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import * as SDK from 'userlens-analytics-sdk';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class UserlensService {
+  private collector: any;
+  private apiUrl = 'https://your.backend.io/events'; // ← replace with your actual endpoint
+  private authToken = '<user_auth_token>'; // optionally inject this dynamically later
+
+  constructor(private http: HttpClient) {
+    const EventCollector = SDK.EventCollector;
+
+    this.collector = new EventCollector((events: any[]) => {
+      this.sendToBackend({ payload: { events } })
+        .then((res) => console.log('[UserlensService] Events sent:', res))
+        .catch((err) => console.error('[UserlensService] Failed to send events:', err));
+    });
+  }
+
+  pushEvent(event: any): void {
+    this.collector?.pushEvent(event);
+  }
+
+  private async sendToBackend(payload: any): Promise<any> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      Authorization: `JWT ${this.authToken}`,
+    });
+
+    return this.http.post(this.apiUrl, payload, { headers }).toPromise();
+  }
+}
+```
+
+This service initializes `EventCollector`, batches captured events, and sends them to your backend via `HttpClient`. Additionally you need to expose `pushEvent()` method to manually track interactions from any component.
+
+Use it in your component:
+```typescript
+// src/app/app-button/app-button.component.ts
+import { Component, Input } from '@angular/core';
+import { UserlensService } from '../userlens.service';
+
+@Component({
+  selector: 'app-button',
+  standalone: true,
+  templateUrl: './app-button.html',
+  styleUrl: './app-button.css',
+})
+export class AppButton {
+  @Input() label = 'Click me';
+
+  constructor(private userlens: UserlensService) {}
+
+  handleClick(): void {
+    this.userlens.pushEvent({
+      event: 'button_click',
+      properties: {
+        label: this.label,
+        timestamp: Date.now(),
+      },
+    });
+  }
+}
+```
+
+Your template:
+```html
+<!-- src/app/app-button/app-button.html -->
+<button (click)="handleClick()">
+  {{ label }}
+</button>
+```
+
+The event will be added to the queue and included in the next batch of events passed to the callback provided during `EventCollector` initialization.
+
+</details>
 
 ### EventCollector Constructor Parameters
 
@@ -275,5 +547,3 @@ new SessionRecorder({
   userId: "your_identified_user_id",
 });
 ```
-
-
