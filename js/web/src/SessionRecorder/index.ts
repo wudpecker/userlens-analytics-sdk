@@ -45,7 +45,12 @@ export default class SessionRecorder {
       maskingOptions = ["passwords"],
     } = recordingOptions;
 
-    this.WRITE_CODE = WRITE_CODE;
+    if (typeof WRITE_CODE === "string") {
+      this.WRITE_CODE = btoa(`${WRITE_CODE}:`);
+    } else {
+      throw new Error("WRITE_CODE must be a string to base64 encode it");
+    }
+
     this.userId = userId;
     this.TIMEOUT = TIMEOUT;
     this.BUFFER_SIZE = BUFFER_SIZE;

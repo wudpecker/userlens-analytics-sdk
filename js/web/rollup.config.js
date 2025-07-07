@@ -3,6 +3,9 @@ const commonjs = require("@rollup/plugin-commonjs");
 const terser = require("@rollup/plugin-terser");
 const typescript = require("rollup-plugin-typescript2");
 
+const replace = require("@rollup/plugin-replace");
+const pkg = require("./package.json");
+
 module.exports = {
   input: "src/index.ts",
   output: [
@@ -22,6 +25,10 @@ module.exports = {
     },
   ],
   plugins: [
+    replace({
+      preventAssignment: true,
+      __USERLENS_VERSION__: JSON.stringify(pkg.version),
+    }),
     resolve(),
     commonjs(),
     typescript({

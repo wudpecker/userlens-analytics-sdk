@@ -1,3 +1,4 @@
+import Bowser from "bowser";
 import DOMPath from "chrome-dompath";
 
 import {
@@ -5,7 +6,9 @@ import {
   DOMSnapshotNode,
   RawEvent,
   PushedEvent,
+  UserContext,
 } from "../types";
+import { getUserlensVersion } from "../utils";
 
 export default class EventCollector {
   private callback!: (
@@ -13,6 +16,22 @@ export default class EventCollector {
   ) => void;
   private intervalTime!: number;
   private events!: (PageViewEvent | RawEvent | PushedEvent)[];
+  private userContext: UserContext | null = null;
+  #senderIntervalId: ReturnType<typeof setInterval> | undefined;
+
+  #originalPushState!: (
+    data: any,
+    unused: string,
+    url?: string | URL | null
+  ) => void;
+  #originalReplaceState!: (
+    data: any,
+    unused: string,
+    url?: string | URL | null
+  ) => void;
+
+  #boundClickHandler = this.#handleClick.bind(this);
+  #boundTrackPageview = this.#trackPageview.bind(this);
 
   constructor(callback: (events: any[]) => void, intervalTime = 5000) {
     if (typeof window === "undefined") {
@@ -37,22 +56,71 @@ export default class EventCollector {
     this.#initializeCollector();
     this.#initializeSender();
     this.#setupSPAListener();
+
+    this.userContext = this.#getUserContext();
   }
 
   public pushEvent(event: PushedEvent) {
     const eventToPush = {
       ...event,
       is_raw: false,
+      properties: {
+        ...event.properties,
+        ...this.#getUserContext(),
+      },
     };
 
     this.events.push(eventToPush);
     window.localStorage.setItem("userlensEvents", JSON.stringify(this.events));
   }
 
+  public stop() {
+    this.#destroyCollector();
+    this.#destroySender();
+    this.#destroySPAListener();
+  }
+
+  #getUserContext(): UserContext {
+    if (this.userContext) {
+      return this.userContext;
+    }
+
+    const browser = Bowser.getParser(window.navigator.userAgent);
+    const info = browser.getBrowser();
+    const os = browser.getOS();
+
+    const userContext: UserContext = {
+      $ul_browser: info.name ?? "Unknown",
+      $ul_browser_version: info.version ?? "Unknown",
+      $ul_os: os.name ?? "Unknown",
+      $ul_os_version: os.versionName ?? "Unknown",
+      $ul_browser_language: navigator.language ?? "en-US",
+      $ul_browser_language_prefix: navigator.language?.split("-")[0] ?? "en",
+      $ul_screen_width: window.screen.width,
+      $ul_screen_height: window.screen.height,
+      $ul_viewport_width: window.innerWidth,
+      $ul_viewport_height: window.innerHeight,
+      $ul_current_url: window.location.href,
+      $ul_pathname: window.location.pathname,
+      $ul_host: window.location.host,
+      $ul_referrer: document.referrer || "$direct",
+      $ul_referring_domain: document.referrer
+        ? new URL(document.referrer).hostname
+        : "$direct",
+      $ul_lib: "userlens.js",
+      $ul_lib_version: getUserlensVersion(),
+      $ul_device_type: /Mobi|Android/i.test(navigator.userAgent)
+        ? "Mobile"
+        : "Desktop",
+      $ul_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    };
+
+    this.userContext = userContext;
+    return userContext;
+  }
+
   #initializeCollector() {
-    document.body.addEventListener("click", (event) => {
-      this.#handleClick(event);
-    });
+    document.body.addEventListener("click", this.#boundClickHandler);
   }
 
   #handleClick(event: MouseEvent) {
@@ -63,14 +131,22 @@ export default class EventCollector {
     const snapshot = this.#collectDOMSnapshot(target);
     const current_url = window.location.href;
 
-    const rawEvent = {
+    const rawEvent: RawEvent = {
       event: selector,
       is_raw: true,
       snapshot,
       current_url,
+      properties: {
+        ...this.#getUserContext(),
+      },
     };
 
     this.events.push(rawEvent);
+
+    if (this.events.length > 100) {
+      this.events = this.events.slice(-100);
+    }
+
     window.localStorage.setItem("userlensEvents", JSON.stringify(this.events));
   }
 
@@ -140,32 +216,28 @@ export default class EventCollector {
   }
 
   #initializeSender() {
-    setInterval(() => {
-      if (this.events.length > 0) {
-        const eventsToSend = [...this.events];
-        this.callback(eventsToSend);
-        this.#clearEvents();
-      }
+    this.#senderIntervalId = setInterval(() => {
+      this.#sendEvents();
     }, this.intervalTime);
   }
 
   #setupSPAListener() {
-    const originalPushState = history.pushState;
-    const originalReplaceState = history.replaceState;
+    this.#originalPushState = history.pushState;
+    this.#originalReplaceState = history.replaceState;
 
     // hook into pushState & replaceState
     history.pushState = (...args) => {
-      originalPushState.apply(history, args);
+      this.#originalPushState.apply(history, args);
       this.#trackPageview();
     };
 
     history.replaceState = (...args) => {
-      originalReplaceState.apply(history, args);
+      this.#originalReplaceState.apply(history, args);
       this.#trackPageview();
     };
 
     // handle back/forward navigation
-    window.addEventListener("popstate", () => this.#trackPageview());
+    window.addEventListener("popstate", this.#boundTrackPageview);
   }
 
   #trackPageview() {
@@ -194,10 +266,11 @@ export default class EventCollector {
       const queryParams = Object.fromEntries(url.searchParams.entries());
 
       const pageview = {
-        event: url?.origin + url?.pathname || "pageview",
+        event: "$ul_pageview",
         properties: {
-          referrer,
-          query: queryParams,
+          $ul_page: url?.origin + url?.pathname || null,
+          $ul_referrer: referrer || null,
+          $ul_query: queryParams,
         },
       };
 
@@ -211,8 +284,32 @@ export default class EventCollector {
     }
   }
 
+  #sendEvents() {
+    if (this.events.length > 0) {
+      const eventsToSend = [...this.events];
+      this.callback(eventsToSend);
+      this.#clearEvents();
+    }
+  }
+
   #clearEvents() {
     this.events = [];
     window.localStorage.setItem("userlensEvents", JSON.stringify(this.events));
+  }
+
+  #destroyCollector() {
+    document.body.removeEventListener("click", this.#boundClickHandler);
+  }
+
+  #destroySender() {
+    this.#sendEvents();
+    clearInterval(this.#senderIntervalId);
+    this.#clearEvents();
+  }
+
+  #destroySPAListener() {
+    history.pushState = this.#originalPushState;
+    history.replaceState = this.#originalReplaceState;
+    window.removeEventListener("popstate", this.#boundTrackPageview);
   }
 }
