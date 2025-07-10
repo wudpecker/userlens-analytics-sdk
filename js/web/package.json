@@ -1,6 +1,6 @@
 {
   "name": "userlens-analytics-sdk",
-  "version": "0.1.23",
+  "version": "0.1.29",
   "main": "dist/userlens.cjs.js",
   "module": "dist/userlens.esm.js",
   "types": "dist/types/index.d.ts",
@@ -11,19 +11,32 @@
   "author": "Wudpecker",
   "license": "ISC",
   "description": "",
+  "exports": {
+    ".": {
+      "import": "./dist/userlens.esm.js",
+      "require": "./dist/userlens.cjs.js",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "^16.0.0",
-    "@rollup/plugin-replace": "^6.0.2",
-    "@rollup/plugin-terser": "^0.4.4",
-    "rollup-plugin-typescript2": "^0.36.0",
     "@rollup/plugin-commonjs": "^28.0.3",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.4",
+    "@types/react": "^18.0.0",
+    "react": "^18.2.0",
     "rollup": "^4.34.6",
     "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "react": ">=17.0.0"
   },
   "dependencies": {
     "@rrweb/rrweb-plugin-console-record": "^2.0.0-alpha.18",
     "bowser": "^2.11.0",
     "chrome-dompath": "^2.0.1",
-    "rrweb": "^2.0.0-alpha.4"
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "rrweb": "^2.0.0-alpha.4",
+    "tslib": "^2.8.1"
   }
 }

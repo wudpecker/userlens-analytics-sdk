@@ -8,6 +8,7 @@ export default class SessionRecorder {
     private maskingOptions;
     private sessionUuid;
     private sessionEvents;
-    private rrwebControl;
+    private rrwebStop;
     constructor({ WRITE_CODE, userId, recordingOptions, }: SessionRecorderConfig);
+    stop(): void;
 }

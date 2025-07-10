@@ -1,5 +1,3 @@
-declare const __USERLENS_VERSION__: string;
-
 export function generateUuid(): string {
   return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) =>
     (
@@ -10,7 +8,5 @@ export function generateUuid(): string {
 }
 
 export function getUserlensVersion(): string {
-  return typeof __USERLENS_VERSION__ !== "undefined"
-    ? __USERLENS_VERSION__
-    : "unknown";
+  return "0.1.29";
 }

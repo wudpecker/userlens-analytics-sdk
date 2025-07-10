@@ -1,10 +1,8 @@
 const resolve = require("@rollup/plugin-node-resolve");
 const commonjs = require("@rollup/plugin-commonjs");
 const terser = require("@rollup/plugin-terser");
-const typescript = require("rollup-plugin-typescript2");
-
-const replace = require("@rollup/plugin-replace");
-const pkg = require("./package.json");
+const typescript = require("@rollup/plugin-typescript");
+const external = require("rollup-plugin-peer-deps-external");
 
 module.exports = {
   input: "src/index.ts",
@@ -13,29 +11,34 @@ module.exports = {
       file: "dist/userlens.cjs.js",
       format: "cjs",
       exports: "auto",
+      sourcemap: true,
     },
     {
       file: "dist/userlens.esm.js",
       format: "esm",
+      sourcemap: true,
     },
     {
       file: "dist/userlens.umd.js",
       format: "umd",
       name: "Userlens",
+      globals: {
+        react: "React",
+        "react-dom": "ReactDOM",
+      },
+      sourcemap: true,
     },
   ],
   plugins: [
-    replace({
-      preventAssignment: true,
-      __USERLENS_VERSION__: JSON.stringify(pkg.version),
-    }),
+    external(),
     resolve(),
-    commonjs(),
     typescript({
       tsconfig: "./tsconfig.json",
-      clean: true,
-      useTsconfigDeclarationDir: true,
+      // clean: true,
+      // useTsconfigDeclarationDir: true,
     }),
+    commonjs(),
     terser(),
   ],
+  external: ["react", "react-dom"],
 };

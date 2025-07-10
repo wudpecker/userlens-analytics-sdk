@@ -1,5 +1,6 @@
 export { default as SessionRecorder } from "./SessionRecorder";
 export { default as EventCollector } from "./EventCollector";
+export { default as UserlensProvider, useUserlens } from "./react";
 
 export type {
   SessionRecorderConfig,

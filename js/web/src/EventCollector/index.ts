@@ -2,6 +2,7 @@ import Bowser from "bowser";
 import DOMPath from "chrome-dompath";
 
 import {
+  EventCollectorConfig,
   PageViewEvent,
   DOMSnapshotNode,
   RawEvent,
@@ -33,7 +34,10 @@ export default class EventCollector {
   #boundClickHandler = this.#handleClick.bind(this);
   #boundTrackPageview = this.#trackPageview.bind(this);
 
-  constructor(callback: (events: any[]) => void, intervalTime = 5000) {
+  constructor(
+    callback: EventCollectorConfig["callback"],
+    intervalTime: EventCollectorConfig["intervalTime"] = 5000
+  ) {
     if (typeof window === "undefined") {
       console.error(
         "Userlens EventCollector error: unavailable outside of browser environment."

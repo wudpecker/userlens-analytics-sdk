@@ -1,4 +1,9 @@
 // EventCollector
+export type EventCollectorConfig = {
+  callback: (events: (PushedEvent | PageViewEvent | RawEvent)[]) => void;
+  intervalTime?: number;
+};
+
 export interface UserContext {
   $ul_browser: string;
   $ul_browser_version: string;
@@ -69,3 +74,12 @@ export interface SessionRecorderConfig {
   userId: string;
   recordingOptions?: SessionRecordingOptions;
 }
+
+// react
+export type UserlensProviderConfig = {
+  WRITE_CODE: string;
+  userId: string;
+  eventCollector: EventCollectorConfig;
+  enableSessionReplay?: boolean;
+  sessionRecorder?: SessionRecordingOptions;
+};

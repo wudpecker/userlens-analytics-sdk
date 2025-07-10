@@ -14,7 +14,7 @@ export default class SessionRecorder {
   private maskingOptions!: MaskingOption[];
   private sessionUuid!: string;
   private sessionEvents: eventWithTime[] = [];
-  private rrwebControl: ReturnType<typeof rrwebRecord> | null = null;
+  private rrwebStop: ReturnType<typeof rrwebRecord> | null = null;
 
   #trackEventsThrottled;
 
@@ -66,11 +66,11 @@ export default class SessionRecorder {
   }
 
   #initRecorder() {
-    if (this.rrwebControl) return;
+    if (this.rrwebStop) return;
 
     this.#createSession();
 
-    this.rrwebControl = rrwebRecord({
+    this.rrwebStop = rrwebRecord({
       emit: (event) => {
         this.#handleEvent(event);
       },
@@ -103,9 +103,7 @@ export default class SessionRecorder {
   }
 
   #resetSession() {
-    localStorage.removeItem("userlensSessionUuid");
-    localStorage.removeItem("userlensSessionLastActive");
-
+    this.#removeLocalSessionData();
     this.#createSession();
   }
 
@@ -128,12 +126,14 @@ export default class SessionRecorder {
     localStorage.setItem("userlensSessionLastActive", now.toString());
   }
 
+  #handleVisibilityChange = () => {
+    if (document.visibilityState) {
+      takeFullSnapshot();
+    }
+  };
+
   #initFocusListener() {
-    window.addEventListener("visibilitychange", () => {
-      if (document.visibilityState) {
-        takeFullSnapshot();
-      }
-    });
+    window.addEventListener("visibilitychange", this.#handleVisibilityChange);
   }
 
   #throttle<T extends (...args: any[]) => void>(
@@ -172,11 +172,33 @@ export default class SessionRecorder {
         }),
       });
     } catch (err) {
+      this.#resetSession();
       console.error("Userlens SDK: Failed to send session events:", err);
     }
   }
 
   #clearEvents() {
     this.sessionEvents = [];
+  }
+
+  #removeLocalSessionData() {
+    localStorage.removeItem("userlensSessionUuid");
+    localStorage.removeItem("userlensSessionLastActive");
+  }
+
+  public stop() {
+    if (!this.rrwebStop) {
+      return;
+    }
+
+    this.rrwebStop();
+    this.rrwebStop = null;
+
+    this.#clearEvents();
+    this.#removeLocalSessionData();
+    window.removeEventListener(
+      "visibilitychange",
+      this.#handleVisibilityChange
+    );
   }
 }
