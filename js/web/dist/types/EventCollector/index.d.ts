@@ -1,11 +1,19 @@
-import { EventCollectorConfig, PushedEvent } from "../types";
+import { EventCollectorConfig } from "../types";
 export default class EventCollector {
     #private;
-    private callback;
+    private userId?;
+    private userTraits?;
+    private autoUploadModeEnabled;
+    private callback?;
     private intervalTime;
     private events;
     private userContext;
-    constructor(callback: EventCollectorConfig["callback"], intervalTime?: EventCollectorConfig["intervalTime"]);
-    pushEvent(event: PushedEvent): void;
+    constructor({ userId, userTraits, WRITE_CODE, callback, intervalTime, }: EventCollectorConfig);
+    pushEvent(event: {
+        event: string;
+        properties?: Record<string, any>;
+    }): void;
+    updateUserTraits(newUserTraits: Record<string, any>): void;
     stop(): void;
+    private getUserContext;
 }

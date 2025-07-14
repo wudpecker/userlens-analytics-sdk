@@ -1,6 +1,9 @@
 // EventCollector
 export type EventCollectorConfig = {
-  callback: (events: (PushedEvent | PageViewEvent | RawEvent)[]) => void;
+  userId: string;
+  userTraits?: Record<string, any>;
+  WRITE_CODE: string;
+  callback?: (events: (PushedEvent | PageViewEvent | RawEvent)[]) => void;
   intervalTime?: number;
 };
 
@@ -38,6 +41,7 @@ export interface DOMSnapshotNode {
 }
 
 export interface RawEvent {
+  userId?: string;
   event: string;
   is_raw: true;
   snapshot: DOMSnapshotNode[];
@@ -46,17 +50,20 @@ export interface RawEvent {
 }
 
 export interface PushedEvent {
+  userId?: string;
   event: string;
+  is_raw: false;
   properties?: Record<string, any>;
 }
 
 interface PageViewEventProperties {
-  page: string | null;
-  referrer?: string | null;
-  query: Record<string, string>;
+  $ul_page: string | null;
+  $ul_referrer?: string | null;
+  $ul_query: Record<string, string>;
 }
 
 export interface PageViewEvent {
+  userId?: string;
   event: string;
   properties: PageViewEventProperties;
 }
@@ -79,6 +86,7 @@ export interface SessionRecorderConfig {
 export type UserlensProviderConfig = {
   WRITE_CODE: string;
   userId: string;
+  userTraits: Record<string, any>;
   eventCollector: EventCollectorConfig;
   enableSessionReplay?: boolean;
   sessionRecorder?: SessionRecordingOptions;

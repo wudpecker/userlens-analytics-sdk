@@ -10,3 +10,7 @@ export function generateUuid(): string {
 export function getUserlensVersion(): string {
   return "0.1.29";
 }
+
+export function saveWriteCode(writeCode: string) {
+  window.localStorage.setItem("$ul_WRITE_CODE", btoa(`${writeCode}:`));
+}

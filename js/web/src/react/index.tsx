@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useRef } from "react";
+import { createContext, useContext, useEffect, useRef } from "react";
 
 import EventCollector from "../EventCollector";
 import SessionRecorder from "../SessionRecorder";
@@ -18,10 +18,10 @@ const UserlensProvider: React.FC<{
   children: React.ReactNode;
   config?: UserlensProviderConfig;
 }> = ({ children, config }) => {
-  const [collector, setCollector] = useState<EventCollector | null>(null);
-  const [sessionRecorder, setSessionRecorder] =
-    useState<SessionRecorder | null>(null);
+  const collectorRef = useRef<EventCollector | null>(null);
+  const sessionRecorderRef = useRef<SessionRecorder | null>(null);
 
+  const lastUserIdRefEc = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (typeof window === "undefined") {
       console.error(
@@ -35,32 +35,45 @@ const UserlensProvider: React.FC<{
       return;
     }
 
-    if (!config.eventCollector.callback) {
-      console.error(
-        "UserlensProvider: config.eventCollector.callback is required."
-      );
+    if (lastUserIdRefEc?.current === config?.userId) {
+      return;
+    }
+    lastUserIdRefEc.current = config?.userId;
+
+    // prevent double instantiation
+    if (collectorRef.current) {
+      console.warn("UserlensProvider: EventCollector already initialized.");
       return;
     }
 
-    const ec = new EventCollector(
-      config.eventCollector.callback,
-      config.eventCollector.intervalTime
-    );
-    setCollector(ec);
-
-    return () => {
-      if (ec) {
-        ec?.stop();
-      }
+    const autoUploadModeEnabled =
+      typeof config?.eventCollector?.callback !== "function" ? true : false;
+    const ecConfig = {
+      userId: config?.userId,
+      userTraits: config?.userTraits,
+      WRITE_CODE: config?.WRITE_CODE,
+      ...(autoUploadModeEnabled && {
+        callback: config?.eventCollector?.callback,
+      }),
     };
-  }, []);
 
-  const lastUserIdRef = useRef<string | undefined>(undefined);
+    collectorRef.current = new EventCollector(ecConfig);
+  }, [config?.userId]);
+
+  useEffect(() => {
+    if (!config?.userTraits) return;
+    if (!collectorRef?.current) return;
+
+    collectorRef?.current?.updateUserTraits(config?.userTraits);
+  }, [config?.userTraits]);
+
+  const lastUserIdRefSr = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (!config) {
       console.error("UserlensProvider: config is required.");
       return;
     }
+
     if (config?.enableSessionReplay === false) {
       return;
     }
@@ -70,18 +83,21 @@ const UserlensProvider: React.FC<{
       );
       return;
     }
-
-    if (lastUserIdRef?.current === config?.userId) {
+    if (lastUserIdRefSr?.current === config?.userId) {
+      return;
+    }
+    if (sessionRecorderRef?.current) {
+      console.warn("UserlensProvider: SessionRecorder already initialized.");
       return;
     }
 
+    lastUserIdRefSr.current = config?.userId;
     const sr = new SessionRecorder({
       WRITE_CODE: config?.WRITE_CODE,
       userId: config?.userId,
       recordingOptions: config?.sessionRecorder,
     });
-
-    setSessionRecorder(sr);
+    sessionRecorderRef.current = sr;
 
     return () => {
       sr?.stop();
@@ -89,11 +105,22 @@ const UserlensProvider: React.FC<{
   }, [config?.userId, config?.enableSessionReplay]);
 
   return (
-    <UserlensContext.Provider value={{ collector, sessionRecorder }}>
+    <UserlensContext.Provider
+      value={{
+        collector: collectorRef?.current,
+        sessionRecorder: sessionRecorderRef?.current,
+      }}
+    >
       {children}
     </UserlensContext.Provider>
   );
 };
 
-export const useUserlens = () => useContext(UserlensContext);
+export const useUserlens = (): UserlensContextType => {
+  const ctx = useContext(UserlensContext);
+  if (!ctx) {
+    throw new Error("useUserlens must be used within a <UserlensProvider>");
+  }
+  return ctx;
+};
 export default UserlensProvider;

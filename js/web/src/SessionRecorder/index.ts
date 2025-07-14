@@ -2,12 +2,12 @@ import { record as rrwebRecord, takeFullSnapshot } from "rrweb";
 import type { eventWithTime } from "rrweb";
 import { getRecordConsolePlugin } from "@rrweb/rrweb-plugin-console-record";
 
-import { generateUuid } from "../utils";
+import { uploadSessionEvents } from "../api";
+import { generateUuid, saveWriteCode } from "../utils";
 
 import { MaskingOption, SessionRecorderConfig } from "../types";
 
 export default class SessionRecorder {
-  private WRITE_CODE!: string;
   private userId!: string;
   private TIMEOUT!: number;
   private BUFFER_SIZE!: number;
@@ -46,7 +46,7 @@ export default class SessionRecorder {
     } = recordingOptions;
 
     if (typeof WRITE_CODE === "string") {
-      this.WRITE_CODE = btoa(`${WRITE_CODE}:`);
+      saveWriteCode(WRITE_CODE);
     } else {
       throw new Error("WRITE_CODE must be a string to base64 encode it");
     }
@@ -70,14 +70,18 @@ export default class SessionRecorder {
 
     this.#createSession();
 
-    this.rrwebStop = rrwebRecord({
-      emit: (event) => {
-        this.#handleEvent(event);
-      },
-      maskAllInputs: this.maskingOptions.includes("all"),
-      maskInputOptions: { password: this.maskingOptions.includes("passwords") },
-      plugins: [getRecordConsolePlugin()],
-    });
+    setTimeout(() => {
+      this.rrwebStop = rrwebRecord({
+        emit: (event) => {
+          this.#handleEvent(event);
+        },
+        maskAllInputs: this.maskingOptions.includes("all"),
+        maskInputOptions: {
+          password: this.maskingOptions.includes("passwords"),
+        },
+        plugins: [getRecordConsolePlugin()],
+      });
+    }, 100);
 
     this.#initFocusListener();
   }
@@ -155,25 +159,18 @@ export default class SessionRecorder {
     const chunkTimestamp =
       this.sessionEvents[this.sessionEvents.length - 1]?.timestamp;
 
-    const payload = [...this.sessionEvents];
+    const events = [...this.sessionEvents];
     this.#clearEvents();
 
     try {
-      await fetch(`https://sessions.userlens.io/session/${this.sessionUuid}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Basic ${this.WRITE_CODE}`,
-        },
-        body: JSON.stringify({
-          userId: this.userId,
-          chunk_timestamp: chunkTimestamp,
-          payload,
-        }),
-      });
-    } catch (err) {
+      await uploadSessionEvents(
+        this.userId,
+        this.sessionUuid,
+        events,
+        chunkTimestamp
+      );
+    } catch (_) {
       this.#resetSession();
-      console.error("Userlens SDK: Failed to send session events:", err);
     }
   }
 

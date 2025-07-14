@@ -1,6 +1,8 @@
 import Bowser from "bowser";
 import DOMPath from "chrome-dompath";
 
+import { identify, track } from "../api";
+
 import {
   EventCollectorConfig,
   PageViewEvent,
@@ -9,10 +11,13 @@ import {
   PushedEvent,
   UserContext,
 } from "../types";
-import { getUserlensVersion } from "../utils";
+import { getUserlensVersion, saveWriteCode } from "../utils";
 
 export default class EventCollector {
-  private callback!: (
+  private userId?: string;
+  private userTraits?: Record<string, any>;
+  private autoUploadModeEnabled!: Boolean;
+  private callback?: (
     events: (PageViewEvent | RawEvent | PushedEvent)[]
   ) => void;
   private intervalTime!: number;
@@ -34,23 +39,49 @@ export default class EventCollector {
   #boundClickHandler = this.#handleClick.bind(this);
   #boundTrackPageview = this.#trackPageview.bind(this);
 
-  constructor(
-    callback: EventCollectorConfig["callback"],
-    intervalTime: EventCollectorConfig["intervalTime"] = 5000
-  ) {
+  constructor({
+    userId,
+    userTraits,
+    WRITE_CODE,
+    callback,
+    intervalTime = 5000,
+  }: EventCollectorConfig) {
     if (typeof window === "undefined") {
       console.error(
         "Userlens EventCollector error: unavailable outside of browser environment."
       );
+      return;
     }
 
-    if (typeof callback !== "function") {
+    if (callback) {
+      this.autoUploadModeEnabled = false;
+    } else {
+      this.autoUploadModeEnabled = true;
+    }
+
+    if (this.autoUploadModeEnabled && !userId?.length) {
+      console.error("Userlens EventCollector error: userId is missing.");
+      return;
+    }
+
+    if (this.autoUploadModeEnabled && !WRITE_CODE?.length) {
+      console.error("Userlens EventCollector error: WRITE_CODE is missing.");
+      return;
+    }
+
+    if (this.autoUploadModeEnabled) {
+      saveWriteCode(WRITE_CODE);
+    }
+
+    if (!this.autoUploadModeEnabled && typeof callback !== "function") {
       console.error(
         "Userlens EventCollector error: callback is not a function."
       );
       return;
     }
 
+    this.userId = userId;
+    this.userTraits = userTraits;
     this.callback = callback;
     this.intervalTime = intervalTime;
 
@@ -61,21 +92,29 @@ export default class EventCollector {
     this.#initializeSender();
     this.#setupSPAListener();
 
-    this.userContext = this.#getUserContext();
+    this.userContext = this.getUserContext();
   }
 
-  public pushEvent(event: PushedEvent) {
-    const eventToPush = {
-      ...event,
+  public pushEvent(event: { event: string; properties?: Record<string, any> }) {
+    const eventToPush: PushedEvent = {
       is_raw: false,
+      ...event,
       properties: {
-        ...event.properties,
-        ...this.#getUserContext(),
+        ...event?.properties,
+        ...this.getUserContext(),
       },
     };
 
+    if (this.userId) {
+      eventToPush.userId = this.userId;
+    }
+
     this.events.push(eventToPush);
     window.localStorage.setItem("userlensEvents", JSON.stringify(this.events));
+  }
+
+  public updateUserTraits(newUserTraits: Record<string, any>) {
+    this.userTraits = newUserTraits;
   }
 
   public stop() {
@@ -84,7 +123,7 @@ export default class EventCollector {
     this.#destroySPAListener();
   }
 
-  #getUserContext(): UserContext {
+  private getUserContext(): UserContext {
     if (this.userContext) {
       return this.userContext;
     }
@@ -141,9 +180,13 @@ export default class EventCollector {
       snapshot,
       current_url,
       properties: {
-        ...this.#getUserContext(),
+        ...this.getUserContext(),
       },
     };
+
+    if (this.userId) {
+      rawEvent.userId = this.userId;
+    }
 
     this.events.push(rawEvent);
 
@@ -269,7 +312,7 @@ export default class EventCollector {
       // Convert query params to object
       const queryParams = Object.fromEntries(url.searchParams.entries());
 
-      const pageview = {
+      const pageview: PageViewEvent = {
         event: "$ul_pageview",
         properties: {
           $ul_page: url?.origin + url?.pathname || null,
@@ -288,13 +331,30 @@ export default class EventCollector {
     }
   }
 
-  #sendEvents() {
-    if (this.events.length > 0) {
-      const eventsToSend = [...this.events];
-      this.callback(eventsToSend);
+  #sendEvents = () => {
+    if (this.events.length === 0) return;
+
+    const eventsToSend = [...this.events];
+
+    if (this.callback) {
+      try {
+        this.callback(eventsToSend);
+      } catch (err) {
+        console.error("Userlens callback error:", err);
+      }
       this.#clearEvents();
+      return;
     }
-  }
+
+    Promise.allSettled([
+      this.userId && this.userTraits
+        ? identify({ userId: this.userId, traits: this.userTraits })
+        : null,
+      track(eventsToSend),
+    ]);
+
+    this.#clearEvents();
+  };
 
   #clearEvents() {
     this.events = [];
