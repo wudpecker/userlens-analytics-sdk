@@ -8,7 +8,7 @@ import { PushedEvent, PageViewEvent, RawEvent } from "../types";
 
 const getWriteCode = () => {
   const code = window.localStorage.getItem("$ul_WRITE_CODE");
-  return code ? btoa(`${code}:`) : null;
+  return code;
 };
 
 export const identify = async (user: {
