@@ -5,6 +5,7 @@ import { identify, track } from "../api";
 
 import {
   EventCollectorConfig,
+  AutoUploadConfig,
   PageViewEvent,
   SnapshotNode,
   SnapshotOptions,
@@ -41,19 +42,16 @@ export default class EventCollector {
   #boundClickHandler = this.#handleClick.bind(this);
   #boundTrackPageview = this.#trackPageview.bind(this);
 
-  constructor({
-    userId,
-    userTraits,
-    WRITE_CODE,
-    callback,
-    intervalTime = 5000,
-  }: EventCollectorConfig) {
+  constructor(config: EventCollectorConfig) {
     if (typeof window === "undefined") {
       console.error(
         "Userlens EventCollector error: unavailable outside of browser environment."
       );
       return;
     }
+
+    const { userId, WRITE_CODE, callback, intervalTime = 5000 } = config;
+    const userTraits = (config as AutoUploadConfig).userTraits;
 
     if (callback) {
       this.autoUploadModeEnabled = false;
@@ -72,7 +70,7 @@ export default class EventCollector {
     }
 
     if (this.autoUploadModeEnabled) {
-      saveWriteCode(WRITE_CODE);
+      saveWriteCode(WRITE_CODE as string);
     }
 
     if (!this.autoUploadModeEnabled && typeof callback !== "function") {

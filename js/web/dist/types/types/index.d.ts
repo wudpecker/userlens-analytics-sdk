@@ -1,10 +1,17 @@
-export type EventCollectorConfig = {
+export type AutoUploadConfig = {
     userId: string;
-    userTraits?: Record<string, any>;
     WRITE_CODE: string;
-    callback?: (events: (PushedEvent | PageViewEvent | RawEvent)[]) => void;
+    userTraits?: Record<string, any>;
+    callback?: undefined;
     intervalTime?: number;
 };
+export type CallbackModeConfig = {
+    callback: (events: (PushedEvent | PageViewEvent | RawEvent)[]) => void;
+    userId?: undefined;
+    WRITE_CODE?: undefined;
+    intervalTime?: number;
+};
+export type EventCollectorConfig = AutoUploadConfig | CallbackModeConfig;
 export interface UserContext {
     $ul_browser: string;
     $ul_browser_version: string;

@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useRef } from "react";
 
 import EventCollector from "../EventCollector";
 import SessionRecorder from "../SessionRecorder";
-import { UserlensProviderConfig } from "../types";
+import { UserlensProviderConfig, EventCollectorConfig } from "../types";
 
 type UserlensContextType = {
   collector: EventCollector | null;
@@ -46,16 +46,20 @@ const UserlensProvider: React.FC<{
       return;
     }
 
-    const autoUploadModeEnabled =
-      typeof config?.eventCollector?.callback !== "function" ? true : false;
-    const ecConfig = {
-      userId: config?.userId,
-      userTraits: config?.userTraits,
-      WRITE_CODE: config?.WRITE_CODE,
-      ...(autoUploadModeEnabled && {
-        callback: config?.eventCollector?.callback,
-      }),
-    };
+    let ecConfig: EventCollectorConfig;
+    if (typeof config.eventCollector.callback === "function") {
+      ecConfig = {
+        callback: config.eventCollector.callback,
+        intervalTime: config.eventCollector.intervalTime,
+      };
+    } else {
+      ecConfig = {
+        userId: config.userId,
+        WRITE_CODE: config.WRITE_CODE,
+        userTraits: config.userTraits, // optionally passed
+        intervalTime: config.eventCollector.intervalTime,
+      };
+    }
 
     collectorRef.current = new EventCollector(ecConfig);
   }, [config?.userId]);
