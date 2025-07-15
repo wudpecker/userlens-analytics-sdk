@@ -8,6 +8,7 @@ export default class EventCollector {
     private intervalTime;
     private events;
     private userContext;
+    private debug;
     constructor({ userId, userTraits, WRITE_CODE, callback, intervalTime, }: EventCollectorConfig);
     pushEvent(event: {
         event: string;

@@ -5,7 +5,8 @@ export { default as UserlensProvider, useUserlens } from "./react";
 export type {
   SessionRecorderConfig,
   SessionRecordingOptions,
-  DOMSnapshotNode,
+  SnapshotNode,
+  SnapshotOptions,
   RawEvent,
   PageViewEvent,
   PushedEvent,

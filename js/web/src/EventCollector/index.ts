@@ -6,7 +6,8 @@ import { identify, track } from "../api";
 import {
   EventCollectorConfig,
   PageViewEvent,
-  DOMSnapshotNode,
+  SnapshotNode,
+  SnapshotOptions,
   RawEvent,
   PushedEvent,
   UserContext,
@@ -23,6 +24,7 @@ export default class EventCollector {
   private intervalTime!: number;
   private events!: (PageViewEvent | RawEvent | PushedEvent)[];
   private userContext: UserContext | null = null;
+  private debug!: boolean;
   #senderIntervalId: ReturnType<typeof setInterval> | undefined;
 
   #originalPushState!: (
@@ -143,7 +145,7 @@ export default class EventCollector {
       $ul_screen_height: window.screen.height,
       $ul_viewport_width: window.innerWidth,
       $ul_viewport_height: window.innerHeight,
-      $ul_current_url: window.location.href,
+      $ul_page: window.location.href,
       $ul_pathname: window.location.pathname,
       $ul_host: window.location.host,
       $ul_referrer: document.referrer || "$direct",
@@ -168,17 +170,16 @@ export default class EventCollector {
 
   #handleClick(event: MouseEvent) {
     const target = event.target;
-    if (!(target instanceof Element)) return;
+    if (!(target instanceof HTMLElement)) return;
 
     const selector = DOMPath.xPath(target, true);
     const snapshot = this.#collectDOMSnapshot(target);
-    const current_url = window.location.href;
+    const snapshotArray = snapshot ? [snapshot] : [];
 
     const rawEvent: RawEvent = {
       event: selector,
       is_raw: true,
-      snapshot,
-      current_url,
+      snapshot: snapshotArray,
       properties: {
         ...this.getUserContext(),
       },
@@ -197,69 +198,118 @@ export default class EventCollector {
     window.localStorage.setItem("userlensEvents", JSON.stringify(this.events));
   }
 
-  #collectDOMSnapshot(target: Element): DOMSnapshotNode[] {
-    const snapshot: DOMSnapshotNode[] = [];
-    let current: Element | null = target;
+  #collectDOMSnapshot(targetEl: HTMLElement): SnapshotNode | null {
+    if (!(targetEl instanceof HTMLElement)) return null;
 
-    while (current && current !== document.documentElement) {
-      if (!(current instanceof HTMLElement)) {
-        current = current.parentElement;
-        continue;
-      }
-
-      // get tagName and inner text if present
-      const tagName = current.tagName.toLowerCase();
-      // get element classList and element id
-      const classList = current.classList.length
-        ? [...current.classList]
-        : null;
-
-      const attr_id = current.id || null;
-      // get current element nth-child and ntf-of-type
-      const nth_child =
-        Array.from(current.parentNode?.children || []).indexOf(current) + 1;
-      const nth_of_type =
-        Array.from(current.parentNode?.children || [])
-          .filter((c) => c.tagName === current?.tagName)
-          .indexOf(current) + 1;
-      // get current element element attributes
-      const attributes: Record<string, string> = {};
-      for (let attr of current.attributes) {
-        attributes[`attr__${attr.name}`] = attr.value;
-      }
-
-      // only allow text if this is one of the last 3 nodes (closest to the target)
-      const i = snapshot.length;
-      const includeText = i < 3;
-
-      const isClickable =
-        ["a", "button", "span", "label"].includes(tagName) ||
-        current.getAttribute("role") === "button" ||
-        current.getAttribute("tabindex") !== null ||
-        typeof current.onclick === "function" ||
-        (current.className &&
-          /btn|button|clickable|cta/.test(current.className));
-
-      const text =
-        includeText && isClickable ? current.innerText?.trim() || null : null;
-
-      // push to the beginning of the array
-      snapshot.unshift({
-        text,
-        tag_name: tagName,
-        attr_class: classList,
-        href: current.getAttribute("href"),
-        attr_id,
-        nth_child,
-        nth_of_type,
-        attributes,
-      });
-
-      // move on to the next element in dom tree
-      current = current.parentElement;
+    const path: HTMLElement[] = [];
+    let el: HTMLElement | null = targetEl;
+    while (el && el.nodeType === 1) {
+      path.unshift(el);
+      el = el.parentElement;
     }
 
-    return snapshot;
+    let root: SnapshotNode | null = null;
+    let currentParent: SnapshotNode | null = null;
+
+    for (let i = 0; i < path.length; i++) {
+      const el = path[i];
+      const isBottomThree = i >= path.length - 3;
+      const isTarget = i === path.length - 1;
+
+      const node = this.#snapshotElementNode(el, {
+        isTarget,
+        leadsToTarget: true,
+      });
+
+      let groupedChildren: SnapshotNode[] = [node];
+
+      if (isBottomThree && el.parentElement) {
+        const siblings = Array.from(el.parentElement.children).filter(
+          (child): child is HTMLElement =>
+            child !== el && child instanceof HTMLElement
+        );
+
+        const siblingNodes = siblings
+          .map((sibling) =>
+            this.#snapshotElementNode(sibling, {
+              includeChildren: true,
+            })
+          )
+          .filter(Boolean);
+
+        groupedChildren = [node, ...siblingNodes];
+      }
+
+      if (!root) root = node;
+      if (currentParent) {
+        if (!currentParent.children) currentParent.children = [];
+        currentParent.children.push(...groupedChildren);
+      }
+
+      currentParent = node;
+    }
+
+    return root;
+  }
+
+  #snapshotElementNode(
+    el: HTMLElement,
+    {
+      isTarget = false,
+      includeChildren = false,
+      leadsToTarget = false,
+    }: SnapshotOptions = {}
+  ): SnapshotNode {
+    const tag_name = el.tagName.toLowerCase();
+    const attr_class = el.classList.length ? Array.from(el.classList) : null;
+    const attr_id = el.id || null;
+    const href = el.getAttribute("href") || null;
+
+    const nth_child = Array.from(el.parentNode?.children || []).indexOf(el) + 1;
+    const nth_of_type =
+      Array.from(el.parentNode?.children || [])
+        .filter((c) => c instanceof HTMLElement && c.tagName === el.tagName)
+        .indexOf(el) + 1;
+
+    const attributes: Record<string, string> = {};
+    for (let attr of Array.from(el.attributes)) {
+      attributes[`attr__${attr.name}`] = attr.value;
+    }
+
+    const textNodes = Array.from(el.childNodes).filter(
+      (n) => n.nodeType === Node.TEXT_NODE
+    );
+    const text =
+      textNodes
+        .map((n) => n.textContent?.trim())
+        .filter(Boolean)
+        .join(" ") || null;
+
+    const node: SnapshotNode = {
+      tag_name,
+      attr_class,
+      attr_id,
+      href,
+      nth_child,
+      nth_of_type,
+      attributes,
+      text,
+      ...(isTarget && { is_target: true }),
+      ...(leadsToTarget && !isTarget && { leads_to_target: true }),
+    };
+
+    if ((includeChildren && el.children.length > 0) || isTarget) {
+      node.children = Array.from(el.children)
+        .filter((c): c is HTMLElement => c instanceof HTMLElement)
+        .map((child) =>
+          this.#snapshotElementNode(child, {
+            includeChildren: true,
+          })
+        )
+        .filter(Boolean);
+    }
+
+    return node;
   }
 
   #initializeSender() {
@@ -320,6 +370,10 @@ export default class EventCollector {
           $ul_query: queryParams,
         },
       };
+
+      if (this.userId) {
+        pageview.userId = this.userId;
+      }
 
       this.events.push(pageview);
       window.localStorage.setItem(

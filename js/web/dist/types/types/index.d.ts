@@ -16,7 +16,7 @@ export interface UserContext {
     $ul_screen_height: number;
     $ul_viewport_width: number;
     $ul_viewport_height: number;
-    $ul_current_url: string;
+    $ul_page: string;
     $ul_pathname: string;
     $ul_host: string;
     $ul_referrer: string;
@@ -26,22 +26,29 @@ export interface UserContext {
     $ul_device_type: "Mobile" | "Desktop";
     $ul_timezone: string;
 }
-export interface DOMSnapshotNode {
-    text: string | null;
+export type SnapshotNode = {
     tag_name: string;
     attr_class: string[] | null;
-    href: string | null;
     attr_id: string | null;
+    href: string | null;
     nth_child: number;
     nth_of_type: number;
     attributes: Record<string, string>;
-}
+    text: string | null;
+    is_target?: true;
+    leads_to_target?: true;
+    children?: SnapshotNode[];
+};
+export type SnapshotOptions = {
+    isTarget?: boolean;
+    includeChildren?: boolean;
+    leadsToTarget?: boolean;
+};
 export interface RawEvent {
     userId?: string;
     event: string;
     is_raw: true;
-    snapshot: DOMSnapshotNode[];
-    current_url: string;
+    snapshot: SnapshotNode[];
     properties: UserContext;
 }
 export interface PushedEvent {
