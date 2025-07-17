@@ -1,12 +1,12 @@
 {
   "name": "userlens-analytics-sdk",
-  "version": "0.1.49",
+  "version": "0.1.51",
   "main": "dist/userlens.cjs.js",
   "module": "dist/userlens.esm.js",
   "types": "dist/types/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "rollup -c"
+    "build": "rollup -c rollup.config.mjs"
   },
   "author": "Wudpecker",
   "license": "ISC",
