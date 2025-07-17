@@ -1,6 +1,6 @@
 {
   "name": "userlens-analytics-sdk",
-  "version": "0.1.48",
+  "version": "0.1.49",
   "main": "dist/userlens.cjs.js",
   "module": "dist/userlens.esm.js",
   "types": "dist/types/index.d.ts",
@@ -16,6 +16,10 @@
       "import": "./dist/userlens.esm.js",
       "require": "./dist/userlens.cjs.js",
       "types": "./dist/types/index.d.ts"
+    },
+    "./react": {
+      "import": "./dist/react.esm.js",
+      "require": "./dist/react.cjs.js"
     }
   },
   "devDependencies": {
