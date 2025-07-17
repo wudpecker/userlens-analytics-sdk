@@ -22,6 +22,7 @@ module.exports = {
       file: "dist/userlens.umd.js",
       format: "umd",
       name: "Userlens",
+      exports: "named",
       globals: {
         react: "React",
         "react-dom": "ReactDOM",
