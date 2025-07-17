@@ -5,7 +5,23 @@ Powerful and lightweight event tracking + session replay SDK for web apps. Works
 ---
 
 ## 📚 Table of Contents
-
+- [📘 Introduction](#-introduction)
+- [📦 Installation](#installation)
+- [⚡ Quickstart](#quickstart)
+- [🧠 SDK Overview](#-sdk-overview)
+- [✍️ EventCollector — Two Modes](#️-eventcollector--two-modes)
+  - [1. Manual Upload Mode (RECOMMENDED)](#1-manual-upload-mode-recommended)
+  - [2. Auto-Upload Mode](#2-auto-upload-mode)
+- [🎥 SessionRecorder](#-sessionrecorder)
+- [⚛️ React Wrapper](#react-wrapper)
+  - [✅ What It Does](#️-what-it-does)
+  - [🛠 Usage Example](#-usage-example)
+  - [🔁 Behavior Details](#-behavior-details)
+- [📌 Tracking Custom Events](#️-tracking-custom-events)
+  - [✍️ Example](#️-example)
+  - [🧠 How it works](#-how-it-works)
+- [🚨 Runtime Notes](#️-typeerror-cannot-read-properties-of-undefined)
+  
 ## 📘 Introduction
 
 `userlens-analytics-sdk` is a lightweight, framework-agnostic JavaScript SDK for collecting user interaction events and recording session replays directly in the browser.
