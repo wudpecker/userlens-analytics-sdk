@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 
 import EventCollector from "../EventCollector";
 import SessionRecorder from "../SessionRecorder";
@@ -18,6 +18,12 @@ const UserlensProvider: React.FC<{
   children: React.ReactNode;
   config?: UserlensProviderConfig;
 }> = ({ children, config }) => {
+  const [eventCollector, setEventCollector] = useState<EventCollector | null>(
+    null
+  );
+  const [sessionRecorder, setSessionRecorder] =
+    useState<SessionRecorder | null>(null);
+
   const collectorRef = useRef<EventCollector | null>(null);
   const sessionRecorderRef = useRef<SessionRecorder | null>(null);
 
@@ -61,14 +67,16 @@ const UserlensProvider: React.FC<{
       };
     }
 
-    collectorRef.current = new EventCollector(ecConfig);
+    const collector = new EventCollector(ecConfig);
+    collectorRef.current = collector;
+    setEventCollector(collector);
   }, [config?.userId]);
 
   useEffect(() => {
     if (!config?.userTraits) return;
-    if (!collectorRef?.current) return;
+    if (!eventCollector) return;
 
-    collectorRef?.current?.updateUserTraits(config?.userTraits);
+    eventCollector?.updateUserTraits(config?.userTraits);
   }, [config?.userTraits]);
 
   const lastUserIdRefSr = useRef<string | undefined>(undefined);
@@ -102,6 +110,7 @@ const UserlensProvider: React.FC<{
       recordingOptions: config?.sessionRecorder,
     });
     sessionRecorderRef.current = sr;
+    setSessionRecorder(sr);
 
     return () => {
       sr?.stop();
@@ -111,8 +120,8 @@ const UserlensProvider: React.FC<{
   return (
     <UserlensContext.Provider
       value={{
-        collector: collectorRef?.current,
-        sessionRecorder: sessionRecorderRef?.current,
+        collector: eventCollector,
+        sessionRecorder: sessionRecorder,
       }}
     >
       {children}
