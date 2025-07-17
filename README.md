@@ -23,10 +23,6 @@ npm install userlens-analytics-sdk
 
 ## Quickstart
 
-You can use `userlens-analytics-sdk` in two main ways:
-
----
-
 ### 🧠 SDK Overview
 
 There are **two layers** to this SDK:
