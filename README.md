@@ -1,4 +1,4 @@
-# 📊 userlens.js
+# 📊 userlens-analytics-sdk
 
 Powerful and lightweight event tracking + session replay SDK for web apps. Works standalone or with React. Built for modern frontend teams.
 
@@ -153,8 +153,6 @@ router.post("/forward-events", async (req, res) => {
 export default router;
 ```
 
-<!-- MENTION HERE HOW TO RECEIVE THE EVENTS AND FORWARD THEM TO UL API -->
-
 ✅ Pros:
 
 - Works around adblockers
@@ -212,9 +210,6 @@ const recorder = new SessionRecorder({
 ### React Wrapper
 
 The `UserlensProvider` is a React context wrapper that **automatically initializes** both:
-
-<!-- - [`EventCollector`](#eventcollector-methods) — for capturing user events
-- [`SessionRecorder`](#sessionrecorder-methods) — for recording user sessions -->
 
 - `EventCollector` - for capturing user events
 - `SessionRecorder` - for recording user sessions
