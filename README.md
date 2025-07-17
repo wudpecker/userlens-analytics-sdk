@@ -1,4 +1,4 @@
-# 📊 userlens.js
+# 📊 userlens-analytics-sdk
 
 Powerful and lightweight event tracking + session replay SDK for web apps. Works standalone or with React. Built for modern frontend teams.
 
