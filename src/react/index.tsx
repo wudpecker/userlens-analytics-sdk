@@ -53,17 +53,17 @@ const UserlensProvider: React.FC<{
     }
 
     let ecConfig: EventCollectorConfig;
-    if (typeof config.eventCollector.callback === "function") {
+    if (typeof config?.eventCollector?.callback === "function") {
       ecConfig = {
-        callback: config.eventCollector.callback,
-        intervalTime: config.eventCollector.intervalTime,
+        callback: config?.eventCollector?.callback,
+        intervalTime: config?.eventCollector?.intervalTime,
       };
     } else {
       ecConfig = {
-        userId: config.userId,
-        WRITE_CODE: config.WRITE_CODE,
-        userTraits: config.userTraits, // optionally passed
-        intervalTime: config.eventCollector.intervalTime,
+        userId: config?.userId,
+        WRITE_CODE: config?.WRITE_CODE,
+        userTraits: config?.userTraits,
+        intervalTime: config?.eventCollector?.intervalTime,
       };
     }
 
