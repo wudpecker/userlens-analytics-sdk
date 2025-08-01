@@ -81,7 +81,8 @@ export default class EventCollector {
     }
 
     this.userId = userId;
-    this.userTraits = userTraits;
+    this.userTraits =
+      typeof userTraits === "object" && userTraits !== null ? userTraits : {};
     this.callback = callback;
     this.intervalTime = intervalTime;
 
