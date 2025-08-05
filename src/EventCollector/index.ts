@@ -12,8 +12,9 @@ import {
   RawEvent,
   PushedEvent,
   UserContext,
+  PageMetadata,
 } from "../types";
-import { getUserlensVersion, saveWriteCode } from "../utils";
+import { getUserlensVersion, saveWriteCode, getIsLocalhost } from "../utils";
 
 export default class EventCollector {
   private userId?: string;
@@ -103,6 +104,7 @@ export default class EventCollector {
       properties: {
         ...event?.properties,
         ...this.getUserContext(),
+        ...this.getPageMetadata(),
       },
     };
 
@@ -144,13 +146,6 @@ export default class EventCollector {
       $ul_screen_height: window.screen.height,
       $ul_viewport_width: window.innerWidth,
       $ul_viewport_height: window.innerHeight,
-      $ul_page: window.location.href,
-      $ul_pathname: window.location.pathname,
-      $ul_host: window.location.host,
-      $ul_referrer: document.referrer || "$direct",
-      $ul_referring_domain: document.referrer
-        ? new URL(document.referrer).hostname
-        : "$direct",
       $ul_lib: "userlens.js",
       $ul_lib_version: getUserlensVersion(),
       $ul_device_type: /Mobi|Android/i.test(navigator.userAgent)
@@ -163,38 +158,84 @@ export default class EventCollector {
     return userContext;
   }
 
+  private getPageMetadata(): PageMetadata {
+    try {
+      const url = new URL(window.location.href);
+
+      let referrer = document.referrer || "$direct";
+      let referringDomain = "$direct";
+
+      try {
+        if (referrer && /^https?:\/\//.test(referrer)) {
+          referringDomain = new URL(referrer).hostname;
+        }
+      } catch (_) {}
+
+      const queryParams = url.search.slice(1);
+
+      return {
+        $ul_page: url.origin + url.pathname,
+        $ul_pathname: url.pathname,
+        $ul_host: url.host,
+        $ul_referrer: referrer,
+        $ul_referring_domain: referringDomain,
+        $ul_query: queryParams,
+      };
+    } catch (_) {
+      return {
+        $ul_page: "",
+        $ul_pathname: "",
+        $ul_host: "",
+        $ul_referrer: "",
+        $ul_referring_domain: "",
+        $ul_query: "",
+      };
+    }
+  }
+
   #initializeCollector() {
     document.body.addEventListener("click", this.#boundClickHandler);
   }
 
   #handleClick(event: MouseEvent) {
-    const target = event.target;
-    if (!(target instanceof HTMLElement)) return;
+    try {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
 
-    const selector = DOMPath.xPath(target, true);
-    const snapshot = this.#collectDOMSnapshot(target);
-    const snapshotArray = snapshot ? [snapshot] : [];
+      const selector = DOMPath.xPath(target, true);
+      const snapshot = this.#collectDOMSnapshot(target);
+      const snapshotArray = snapshot ? [snapshot] : [];
 
-    const rawEvent: RawEvent = {
-      event: selector,
-      is_raw: true,
-      snapshot: snapshotArray,
-      properties: {
-        ...this.getUserContext(),
-      },
-    };
+      const rawEvent: RawEvent = {
+        event: selector,
+        is_raw: true,
+        snapshot: snapshotArray,
+        properties: {
+          ...this.getUserContext(),
+          ...this.getPageMetadata(),
+        },
+      };
 
-    if (this.userId) {
-      rawEvent.userId = this.userId;
+      if (this.userId) {
+        rawEvent.userId = this.userId;
+      }
+
+      this.events.push(rawEvent);
+
+      if (this.events.length > 100) {
+        this.events = this.events.slice(-100);
+      }
+
+      window.localStorage.setItem(
+        "userlensEvents",
+        JSON.stringify(this.events)
+      );
+    } catch (err) {
+      console.warn(
+        "Userlens EventCollector error: click event handling failed",
+        err
+      );
     }
-
-    this.events.push(rawEvent);
-
-    if (this.events.length > 100) {
-      this.events = this.events.slice(-100);
-    }
-
-    window.localStorage.setItem("userlensEvents", JSON.stringify(this.events));
   }
 
   #collectDOMSnapshot(targetEl: HTMLElement): SnapshotNode | null {
@@ -337,51 +378,21 @@ export default class EventCollector {
   }
 
   #trackPageview() {
-    try {
-      const url = new URL(window.location.href);
+    const isLocalhost: boolean = getIsLocalhost();
+    if (isLocalhost) return;
 
-      if (
-        url?.hostname === "localhost" ||
-        url?.hostname === "127.0.0.1" ||
-        url?.hostname === "::1"
-      )
-        return;
+    const pageMetadata = this.getPageMetadata();
+    const pageViewEvent: PageViewEvent = {
+      event: "$ul_pageview",
+      properties: pageMetadata,
+    };
 
-      let referrer = "";
-      try {
-        if (document.referrer && /^https?:\/\//.test(document.referrer)) {
-          referrer =
-            new URL(document.referrer).origin +
-            new URL(document.referrer).pathname;
-        }
-      } catch (e) {
-        referrer = "";
-      }
-
-      // Convert query params to object
-      const queryParams = Object.fromEntries(url.searchParams.entries());
-
-      const pageview: PageViewEvent = {
-        event: "$ul_pageview",
-        properties: {
-          $ul_page: url?.origin + url?.pathname || null,
-          $ul_referrer: referrer || null,
-          $ul_query: queryParams,
-        },
-      };
-
-      if (this.userId) {
-        pageview.userId = this.userId;
-      }
-
-      this.events.push(pageview);
-      window.localStorage.setItem(
-        "userlensEvents",
-        JSON.stringify(this.events)
-      );
-    } catch (err) {
-      console.warn("Userlens EventCollector error: tracking page view failed");
+    if (this.userId) {
+      pageViewEvent.userId = this.userId;
     }
+
+    this.events.push(pageViewEvent);
+    window.localStorage.setItem("userlensEvents", JSON.stringify(this.events));
   }
 
   #sendEvents = () => {

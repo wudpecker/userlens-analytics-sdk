@@ -27,16 +27,20 @@ export interface UserContext {
   $ul_screen_height: number;
   $ul_viewport_width: number;
   $ul_viewport_height: number;
-  $ul_page: string;
-  $ul_pathname: string;
-  $ul_host: string;
-  $ul_referrer: string;
-  $ul_referring_domain: string;
   $ul_lib: string;
   $ul_lib_version: string;
   $ul_device_type: "Mobile" | "Desktop";
   $ul_timezone: string;
 }
+
+export type PageMetadata = {
+  $ul_page: string;
+  $ul_pathname: string;
+  $ul_host: string;
+  $ul_referrer: string;
+  $ul_referring_domain: string;
+  $ul_query: string;
+};
 
 export type SnapshotNode = {
   tag_name: string;
@@ -73,16 +77,10 @@ export interface PushedEvent {
   properties?: Record<string, any>;
 }
 
-interface PageViewEventProperties {
-  $ul_page: string | null;
-  $ul_referrer?: string | null;
-  $ul_query: Record<string, string>;
-}
-
 export interface PageViewEvent {
   userId?: string;
   event: string;
-  properties: PageViewEventProperties;
+  properties: PageMetadata;
 }
 
 // SessionRecorder
