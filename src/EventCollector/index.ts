@@ -45,9 +45,9 @@ export default class EventCollector {
 
   constructor(config: EventCollectorConfig) {
     if (typeof window === "undefined") {
-      console.error(
-        "Userlens EventCollector error: unavailable outside of browser environment."
-      );
+      // console.error(
+      //   "Userlens EventCollector error: unavailable outside of browser environment."
+      // );
       return;
     }
 
@@ -61,12 +61,12 @@ export default class EventCollector {
     }
 
     if (this.autoUploadModeEnabled && !userId?.length) {
-      console.error("Userlens EventCollector error: userId is missing.");
+      // console.error("Userlens EventCollector error: userId is missing.");
       return;
     }
 
     if (this.autoUploadModeEnabled && !WRITE_CODE?.length) {
-      console.error("Userlens EventCollector error: WRITE_CODE is missing.");
+      // console.error("Userlens EventCollector error: WRITE_CODE is missing.");
       return;
     }
 
@@ -75,9 +75,9 @@ export default class EventCollector {
     }
 
     if (!this.autoUploadModeEnabled && typeof callback !== "function") {
-      console.error(
-        "Userlens EventCollector error: callback is not a function."
-      );
+      // console.error(
+      //   "Userlens EventCollector error: callback is not a function."
+      // );
       return;
     }
 
@@ -224,10 +224,10 @@ export default class EventCollector {
         this.events = this.events.slice(-100);
       }
     } catch (err) {
-      console.warn(
-        "Userlens EventCollector error: click event handling failed",
-        err
-      );
+      // console.warn(
+      //   "Userlens EventCollector error: click event handling failed",
+      //   err
+      // );
     }
   }
 
@@ -396,7 +396,7 @@ export default class EventCollector {
       try {
         this.callback(eventsToSend);
       } catch (err) {
-        console.error("Userlens callback error:", err);
+        // console.error("Userlens callback error:", err);
       }
       this.#clearEvents();
       return;
