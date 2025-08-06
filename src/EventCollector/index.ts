@@ -87,8 +87,7 @@ export default class EventCollector {
     this.callback = callback;
     this.intervalTime = intervalTime;
 
-    const eventsFromStorage = window.localStorage.getItem("userlensEvents");
-    this.events = eventsFromStorage ? JSON.parse(eventsFromStorage) : [];
+    this.events = [];
 
     this.#initializeCollector();
     this.#initializeSender();
@@ -113,7 +112,6 @@ export default class EventCollector {
     }
 
     this.events.push(eventToPush);
-    window.localStorage.setItem("userlensEvents", JSON.stringify(this.events));
   }
 
   public updateUserTraits(newUserTraits: Record<string, any>) {
@@ -225,11 +223,6 @@ export default class EventCollector {
       if (this.events.length > 100) {
         this.events = this.events.slice(-100);
       }
-
-      window.localStorage.setItem(
-        "userlensEvents",
-        JSON.stringify(this.events)
-      );
     } catch (err) {
       console.warn(
         "Userlens EventCollector error: click event handling failed",
@@ -392,7 +385,6 @@ export default class EventCollector {
     }
 
     this.events.push(pageViewEvent);
-    window.localStorage.setItem("userlensEvents", JSON.stringify(this.events));
   }
 
   #sendEvents = () => {
@@ -422,7 +414,6 @@ export default class EventCollector {
 
   #clearEvents() {
     this.events = [];
-    window.localStorage.setItem("userlensEvents", JSON.stringify(this.events));
   }
 
   #destroyCollector() {

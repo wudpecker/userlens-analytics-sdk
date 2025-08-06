@@ -8,7 +8,7 @@ export function generateUuid(): string {
 }
 
 export function getUserlensVersion(): string {
-  return "0.1.56";
+  return "0.1.59";
 }
 
 export function saveWriteCode(writeCode: string) {
