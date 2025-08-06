@@ -327,15 +327,15 @@ export default class EventCollector {
 
     const node: SnapshotNode = {
       tag_name,
-      attr_class,
-      attr_id,
-      href,
       nth_child,
       nth_of_type,
       attributes,
-      text,
-      ...(isTarget && { is_target: true }),
-      ...(leadsToTarget && !isTarget && { leads_to_target: true }),
+      ...(attr_class ? { attr_class } : {}),
+      ...(attr_id ? { attr_id } : {}),
+      ...(href ? { href } : {}),
+      ...(text ? { text } : {}),
+      ...(isTarget ? { is_target: true } : {}),
+      ...(leadsToTarget && !isTarget ? { leads_to_target: true } : {}),
     };
 
     if ((includeChildren && el.children.length > 0) || isTarget) {

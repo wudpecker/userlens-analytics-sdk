@@ -44,13 +44,13 @@ export type PageMetadata = {
 
 export type SnapshotNode = {
   tag_name: string;
-  attr_class: string[] | null;
-  attr_id: string | null;
-  href: string | null;
+  attr_class?: string[];
+  attr_id?: string;
+  href?: string;
   nth_child: number;
   nth_of_type: number;
   attributes: Record<string, string>;
-  text: string | null;
+  text?: string;
   is_target?: true;
   leads_to_target?: true;
   children?: SnapshotNode[];
