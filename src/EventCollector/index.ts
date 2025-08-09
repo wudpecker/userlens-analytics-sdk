@@ -114,6 +114,10 @@ export default class EventCollector {
     this.events.push(eventToPush);
   }
 
+  public identify(userId: string, userTraits: Record<string, any>) {
+    identify({ userId, traits: userTraits });
+  }
+
   public updateUserTraits(newUserTraits: Record<string, any>) {
     this.userTraits = newUserTraits;
   }
