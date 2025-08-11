@@ -294,7 +294,7 @@ return (
 Then, you can access the SDK instances anywhere using the `useUserlens()` hook:
 
 ```ts
-import { useUserlens } from "userlens-analytics-sdk";
+import { useUserlens } from "userlens-analytics-sdk/react";
 
 const { collector, sessionRecorder } = useUserlens();
 
