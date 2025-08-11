@@ -249,7 +249,7 @@ Under the hood, the React wrapper:
 #### 🛠 Usage Example
 
 ```tsx
-import { UserlensProvider } from "userlens-analytics-sdk";
+import UserlensProvider from "userlens-analytics-sdk/react";
 
 const config = useMemo(
   () => ({
