@@ -1,7 +1,7 @@
 import Bowser from "bowser";
 import DOMPath from "chrome-dompath";
 
-import { identify, track } from "../api";
+import { identify, track, group } from "../api";
 
 import {
   EventCollectorConfig,
@@ -114,8 +114,12 @@ export default class EventCollector {
     this.events.push(eventToPush);
   }
 
-  public identify(userId: string, userTraits: Record<string, any>) {
-    identify({ userId, traits: userTraits });
+  public identify(userId: string | number, userTraits: Record<string, any>) {
+    return identify({ userId, traits: userTraits });
+  }
+
+  public group(groupId: string | number, groupTraits: Record<string, any>) {
+    return group({ groupId, traits: groupTraits })
   }
 
   public updateUserTraits(newUserTraits: Record<string, any>) {
