@@ -119,7 +119,7 @@ export default class EventCollector {
   }
 
   public group(groupId: string | number, groupTraits: Record<string, any>) {
-    return group({ groupId, traits: groupTraits })
+    return group({ groupId, traits: groupTraits, userId: this.userId })
   }
 
   public updateUserTraits(newUserTraits: Record<string, any>) {

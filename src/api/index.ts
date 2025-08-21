@@ -43,15 +43,16 @@ export const identify = async (user: {
 export const group = async (group: {
   groupId: string | number;
   traits: Record<string, any>;
+  userId?: string;
 }) => {
   if (!group?.groupId) return;
 
-  const groupId = group.groupId;
-  const groupTraits = group?.traits;
+  const { groupId, traits: groupTraits, userId } = group;
 
   const body = {
     type: "group",
     groupId,
+    ...(userId && { userId }),
     source: "userlens-js-analytics-sdk",
     traits: groupTraits
   }
