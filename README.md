@@ -249,7 +249,7 @@ Under the hood, the React wrapper:
 #### 🛠 Usage Example
 
 ```tsx
-import { UserlensProvider } from "userlens-analytics-sdk";
+import UserlensProvider from "userlens-analytics-sdk/react";
 
 const config = useMemo(
   () => ({
@@ -294,7 +294,7 @@ return (
 Then, you can access the SDK instances anywhere using the `useUserlens()` hook:
 
 ```ts
-import { useUserlens } from "userlens-analytics-sdk";
+import { useUserlens } from "userlens-analytics-sdk/react";
 
 const { collector, sessionRecorder } = useUserlens();
 

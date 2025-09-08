@@ -12,7 +12,7 @@ const getWriteCode = () => {
 };
 
 export const identify = async (user: {
-  userId: string;
+  userId: string | number;
   traits: Record<string, any>;
 }) => {
   if (!user?.userId) return;
@@ -39,6 +39,37 @@ export const identify = async (user: {
 
   return "ok";
 };
+
+export const group = async (group: {
+  groupId: string | number;
+  traits: Record<string, any>;
+  userId?: string;
+}) => {
+  if (!group?.groupId) return;
+
+  const { groupId, traits: groupTraits, userId } = group;
+
+  const body = {
+    type: "group",
+    groupId,
+    ...(userId && { userId }),
+    source: "userlens-js-analytics-sdk",
+    traits: groupTraits
+  }
+
+  const res = await fetch(`${MAIN_BASE_URL}/event`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Basic ${getWriteCode()}`,
+    },
+    body: JSON.stringify(body)
+  })
+
+  if (!res.ok) throw new Error("Userlens HTTP error: failed to identify");
+
+  return "ok";
+}
 
 export const track = async (
   events: (PushedEvent | PageViewEvent | RawEvent)[]
