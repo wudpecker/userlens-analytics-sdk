@@ -1,9 +1,9 @@
 {
   "name": "userlens-analytics-sdk",
-  "version": "0.1.62",
-  "main": "dist/userlens.cjs.js",
-  "module": "dist/userlens.esm.js",
-  "types": "dist/types/index.d.ts",
+  "version": "0.1.65",
+  "main": "./dist/main.cjs.js",
+  "module": "./dist/main.esm.js",
+  "types": "./dist/types/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rollup -c rollup.config.mjs"
@@ -13,15 +13,23 @@
   "description": "",
   "exports": {
     ".": {
-      "import": "./dist/userlens.esm.js",
-      "require": "./dist/userlens.cjs.js",
-      "types": "./dist/types/index.d.ts"
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/main.esm.js",
+      "require": "./dist/main.cjs.js"
     },
     "./react": {
+      "types": "./dist/types/react.d.ts",
       "import": "./dist/react.esm.js",
       "require": "./dist/react.cjs.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
   "devDependencies": {
     "@rollup/plugin-commonjs": "^28.0.3",
     "@rollup/plugin-node-resolve": "^16.0.0",
@@ -30,6 +38,7 @@
     "@types/react": "^18.0.0",
     "react": "^18.2.0",
     "rollup": "^4.34.6",
+    "rollup-plugin-dts": "^6.2.3",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
