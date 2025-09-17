@@ -1,6 +1,7 @@
 // EventCollector
 export type AutoUploadConfig = {
   userId: string;
+  skipRawEvents?: boolean;
   WRITE_CODE: string;
   userTraits?: Record<string, any>;
   callback?: undefined;
@@ -12,6 +13,7 @@ export type CallbackModeConfig = {
   userId?: undefined;
   WRITE_CODE?: undefined;
   intervalTime?: number;
+  skipRawEvents?: boolean;
 };
 
 export type EventCollectorConfig = AutoUploadConfig | CallbackModeConfig;

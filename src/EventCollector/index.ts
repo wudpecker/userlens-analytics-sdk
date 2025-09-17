@@ -51,7 +51,13 @@ export default class EventCollector {
       return;
     }
 
-    const { userId, WRITE_CODE, callback, intervalTime = 5000 } = config;
+    const {
+      userId,
+      WRITE_CODE,
+      callback,
+      intervalTime = 5000,
+      skipRawEvents = false,
+    } = config;
     const userTraits = (config as AutoUploadConfig).userTraits;
 
     if (callback) {
@@ -86,12 +92,14 @@ export default class EventCollector {
       typeof userTraits === "object" && userTraits !== null ? userTraits : {};
     this.callback = callback;
     this.intervalTime = intervalTime;
-
     this.events = [];
 
-    this.#initializeCollector();
+    if (!skipRawEvents) {
+      this.#initializeCollector();
+      this.#setupSPAListener();
+    }
+
     this.#initializeSender();
-    this.#setupSPAListener();
 
     this.userContext = this.getUserContext();
   }
@@ -119,7 +127,7 @@ export default class EventCollector {
   }
 
   public group(groupId: string | number, groupTraits: Record<string, any>) {
-    return group({ groupId, traits: groupTraits, userId: this.userId })
+    return group({ groupId, traits: groupTraits, userId: this.userId });
   }
 
   public updateUserTraits(newUserTraits: Record<string, any>) {

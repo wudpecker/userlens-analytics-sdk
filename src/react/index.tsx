@@ -57,6 +57,7 @@ const UserlensProvider: React.FC<{
       ecConfig = {
         callback: config?.eventCollector?.callback,
         intervalTime: config?.eventCollector?.intervalTime,
+        skipRawEvents: config?.eventCollector?.skipRawEvents,
       };
     } else {
       ecConfig = {
@@ -64,6 +65,7 @@ const UserlensProvider: React.FC<{
         WRITE_CODE: config?.WRITE_CODE,
         userTraits: config?.userTraits,
         intervalTime: config?.eventCollector?.intervalTime,
+        skipRawEvents: config?.eventCollector?.skipRawEvents,
       };
     }
 
