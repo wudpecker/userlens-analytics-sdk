@@ -20,7 +20,14 @@ Powerful and lightweight event tracking + session replay SDK for web apps. Works
 - [📌 Tracking Custom Events](#️-tracking-custom-events)
   - [✍️ Example](#️-example)
   - [🧠 How it works](#-how-it-works)
-- [🚨 Runtime Notes](#️-typeerror-cannot-read-properties-of-undefined)
+- [🛰 API Documentation](#-api-documentation)
+  - [🔐 Authentication](#-authentication)
+  - [🧭 Endpoint](#-endpoint)
+    - [1. Identify](#1-identify)
+    - [2. Group](#2-group)
+    - [3. Track](#3-track)
+  - [🔄 Sending Raw Events (from EventCollector)](#-sending-raw-events-from-eventcollector)
+
   
 ## 📘 Introduction
 
@@ -364,3 +371,121 @@ if (collector) {
   collector.pushEvent({ event: "Something" });
 }
 ```
+
+### 🛰 API Documentation
+
+As an alternative to using `userlens-analytics-sdk`, you can implement event tracking manually via our HTTP API.
+
+---
+
+#### 🔐 Authentication
+
+All requests must include a **Base64-encoded write code** in the `Authorization` header.
+
+You can retrieve your write code at:  
+👉 [https://app.userlens.io/settings/userlens-sdk](https://app.userlens.io/settings/userlens-sdk)
+
+**Encoding steps:**
+
+```ts
+const raw = "your_write_code:";
+const encoded = Buffer.from(raw).toString("base64");
+
+// Set header: Authorization: `Basic ${encoded}`
+```
+
+---
+
+#### 🧭 Endpoint
+
+All standard requests go to:
+
+```
+POST https://events.userlens.io/event
+```
+
+You can send three types of calls:
+
+---
+
+##### 1. Identify
+
+Keeps user traits up to date.
+
+```ts
+const body = {
+  type: "identify",
+  userId, // string
+  source: "userlens-restapi",
+  traits, // object with user info (e.g. email, name, etc.)
+};
+```
+
+> `traits` is a free-form object — add any relevant user properties.
+
+---
+
+##### 2. Group
+
+Updates company or organization traits.
+
+```ts
+const body = {
+  type: "group",
+  groupId, // string
+  userId,  // string (optional, for association)
+  source: "userlens-restapi",
+  traits, // object with company info
+};
+```
+
+---
+
+##### 3. Track
+
+Sends a single custom event.
+
+```ts
+const body = {
+  type: "track",
+  userId, // string
+  source: "userlens-restapi",
+  event: "button-clicked", // event name
+  properties: {
+    color: "red", // optional metadata
+  },
+};
+```
+
+---
+
+#### 🔄 Sending Raw Events (from EventCollector)
+
+If you're forwarding events collected by `EventCollector`, send them to:
+
+```
+POST https://raw.userlens.io/raw/event
+```
+
+Payload format:
+
+```ts
+const body = {
+  events: [
+    {
+      event: "input-change",
+      is_raw: true,
+      snapshot: [], // DOM snapshot (optional)
+      properties: {}, // metadata
+    },
+    {
+      event: "form-submitted",
+      is_raw: false, // explicitly pushed via pushEvent()
+      properties: {},
+    },
+  ],
+};
+```
+
+✅ Use this for sending batched autocollected + custom events.
+
