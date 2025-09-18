@@ -433,7 +433,7 @@ Updates company or organization traits.
 const body = {
   type: "group",
   groupId, // string
-  userId,  // string (optional, for association)
+  userId,  // string (required for association)
   source: "userlens-restapi",
   traits, // object with company info
 };
