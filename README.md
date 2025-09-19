@@ -94,15 +94,6 @@ const router = express.Router();
 /**
  * Your WRITE_CODE — retrieve it from:
  * 👉 https://app.userlens.io/settings/userlens-sdk
- *
- * Before using it as an Authorization header:
- * 1. Append a colon (`:`) at the end of the string
- * 2. Base64 encode the result
- *
- * Example:
- *   const raw = "your_write_code:";
- *   const encoded = Buffer.from(raw).toString("base64");
- *   → use that as the value for Authorization: `Basic ${encoded}`
  */
 const WRITE_CODE = process.env.USERLENS_WRITE_CODE!;
 
@@ -380,19 +371,10 @@ As an alternative to using `userlens-analytics-sdk`, you can implement event tra
 
 #### 🔐 Authentication
 
-All requests must include a **Base64-encoded write code** in the `Authorization` header.
+All requests must include a **write code** in the `Authorization` header.
 
 You can retrieve your write code at:  
 👉 [https://app.userlens.io/settings/userlens-sdk](https://app.userlens.io/settings/userlens-sdk)
-
-**Encoding steps:**
-
-```ts
-const raw = "your_write_code:";
-const encoded = Buffer.from(raw).toString("base64");
-
-// Set header: Authorization: `Basic ${encoded}`
-```
 
 ---
 
