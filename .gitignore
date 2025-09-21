@@ -11,3 +11,5 @@ dist/
 
 # TypeScript
 *.tsbuildinfo
+
+userlens-analytics-sdk-*.tgz
