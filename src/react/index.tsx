@@ -58,6 +58,7 @@ const UserlensProvider: React.FC<{
         callback: config?.eventCollector?.callback,
         intervalTime: config?.eventCollector?.intervalTime,
         skipRawEvents: config?.eventCollector?.skipRawEvents,
+        useLighterSnapshot: config?.eventCollector?.useLighterSnapshot,
       };
     } else {
       ecConfig = {
@@ -66,6 +67,7 @@ const UserlensProvider: React.FC<{
         userTraits: config?.userTraits,
         intervalTime: config?.eventCollector?.intervalTime,
         skipRawEvents: config?.eventCollector?.skipRawEvents,
+        useLighterSnapshot: config?.eventCollector?.useLighterSnapshot,
       };
     }
 

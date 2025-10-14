@@ -6,6 +6,7 @@ export type AutoUploadConfig = {
   userTraits?: Record<string, any>;
   callback?: undefined;
   intervalTime?: number;
+  useLighterSnapshot?: boolean;
 };
 
 export type CallbackModeConfig = {
@@ -14,6 +15,7 @@ export type CallbackModeConfig = {
   WRITE_CODE?: undefined;
   intervalTime?: number;
   skipRawEvents?: boolean;
+  useLighterSnapshot?: boolean;
 };
 
 export type EventCollectorConfig = AutoUploadConfig | CallbackModeConfig;

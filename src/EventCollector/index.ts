@@ -20,6 +20,7 @@ export default class EventCollector {
   private userId?: string;
   private userTraits?: Record<string, any>;
   private autoUploadModeEnabled!: Boolean;
+  private useLighterSnapshot: boolean = false;
   private callback?: (
     events: (PageViewEvent | RawEvent | PushedEvent)[]
   ) => void;
@@ -57,6 +58,7 @@ export default class EventCollector {
       callback,
       intervalTime = 5000,
       skipRawEvents = false,
+      useLighterSnapshot = false,
     } = config;
     const userTraits = (config as AutoUploadConfig).userTraits;
 
@@ -95,6 +97,7 @@ export default class EventCollector {
     this.events = [];
 
     if (!skipRawEvents) {
+      this.useLighterSnapshot = useLighterSnapshot;
       this.#initializeCollector();
       this.#setupSPAListener();
     }
@@ -217,7 +220,9 @@ export default class EventCollector {
       if (!(target instanceof HTMLElement)) return;
 
       const selector = DOMPath.xPath(target, true);
-      const snapshot = this.#collectDOMSnapshot(target);
+      const snapshot = this.useLighterSnapshot
+        ? this.#collectLightDOMSnapshot(target)
+        : this.#collectDOMSnapshot(target);
       const snapshotArray = snapshot ? [snapshot] : [];
 
       const rawEvent: RawEvent = {
@@ -245,6 +250,56 @@ export default class EventCollector {
       //   err
       // );
     }
+  }
+
+  #collectLightDOMSnapshot(targetEl: HTMLElement): SnapshotNode | null {
+    if (!(targetEl instanceof HTMLElement)) return null;
+
+    const body = document.body as HTMLElement;
+    if (!body) return null;
+
+    const path: HTMLElement[] = [];
+    let el: HTMLElement | null = targetEl;
+    while (el && el.nodeType === 1 && el !== body) {
+      path.unshift(el);
+      el = el.parentElement;
+    }
+
+    const fullPath = [body, ...path.filter((p) => p !== body)];
+
+    let root: SnapshotNode | null = null;
+    let parentNode: SnapshotNode | null = null;
+
+    for (let i = 0; i < fullPath.length; i++) {
+      const el = fullPath[i];
+      const isTarget = i === fullPath.length - 1;
+
+      const node = this.#snapshotElementNode(el, {
+        isTarget,
+        leadsToTarget: !isTarget,
+      });
+
+      if (!root) root = node;
+      if (parentNode) {
+        if (!parentNode.children) parentNode.children = [];
+        parentNode.children.push(node);
+      }
+      parentNode = node;
+    }
+
+    const targetNode = parentNode;
+    if (targetNode && targetEl.children.length > 0) {
+      targetNode.children = Array.from(targetEl.children)
+        .filter((c): c is HTMLElement => c instanceof HTMLElement)
+        .map((child) =>
+          this.#snapshotElementNode(child, {
+            includeChildren: true,
+          })
+        )
+        .filter(Boolean) as SnapshotNode[];
+    }
+
+    return root;
   }
 
   #collectDOMSnapshot(targetEl: HTMLElement): SnapshotNode | null {
