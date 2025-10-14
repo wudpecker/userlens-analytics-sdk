@@ -488,7 +488,7 @@ export default class EventCollector {
   }
 
   #destroyCollector() {
-    document.body.removeEventListener("click", this.#boundClickHandler);
+    document.removeEventListener("click", this.#boundClickHandler, true);
   }
 
   #destroySender() {
