@@ -208,7 +208,7 @@ export default class EventCollector {
   }
 
   #initializeCollector() {
-    document.body.addEventListener("click", this.#boundClickHandler);
+    document.addEventListener("click", this.#boundClickHandler, true);
   }
 
   #handleClick(event: MouseEvent) {
