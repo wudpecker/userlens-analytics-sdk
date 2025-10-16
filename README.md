@@ -178,7 +178,13 @@ This mode sends events directly to the Userlens API from the frontend.
 const collector = new EventCollector({
   userId: "user-123", // ✅ required
   WRITE_CODE: "your-public-write-code", // ✅ required
-  userTraits: { plan: "starter" }, // optional
+  userTraits: { plan: "starter" }, // ✅ required, pass as many traits as you can so Userlens provides better insights
+  groupId: "group-123", // passed to identify a group (e.g. company that the user belongs to)
+  groupTraits: {
+    domain: "userlens.io",
+    title: "Userlens",
+    industry: "Software"
+  }, // traits that exist on your group object (e.g. company workspace traits)
   intervalTime: 5000, // optional
 });
 ```
@@ -257,8 +263,16 @@ const config = useMemo(
     // Required only if you're enabling session recording
     // or using auto-upload mode for EventCollector
     userId: "user-123",
-    // Optional — used when letting the SDK handle event uploads automatically
+    // Used when letting the SDK handle event uploads automatically. Keeps traits up-to-date.
     userTraits: { email: "jane@example.com" },
+    // Used when letting the SDK handle event uploads automatically. Associates user with a group (e.g. company).
+    groupId: "company-123",
+    // Used when letting the SDK handle event uploads automatically. Keeps group traits up-to-date.
+    groupTraits: {
+      domain: "userlens.io",
+      title: "Userlens",
+      industry: "Software"
+    },
     eventCollector: {
       // Required when you want to manually handle event forwarding
       callback: (events) => {
