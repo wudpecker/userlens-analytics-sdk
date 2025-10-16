@@ -9,6 +9,7 @@ export type AutoUploadConfig = {
   callback?: undefined;
   intervalTime?: number;
   useLighterSnapshot?: boolean;
+  debug?: boolean;
 };
 
 export type CallbackModeConfig = {
@@ -18,6 +19,7 @@ export type CallbackModeConfig = {
   intervalTime?: number;
   skipRawEvents?: boolean;
   useLighterSnapshot?: boolean;
+  debug?: boolean;
 };
 
 export type EventCollectorConfig = AutoUploadConfig | CallbackModeConfig;

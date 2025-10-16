@@ -48,9 +48,9 @@ export default class EventCollector {
 
   constructor(config: EventCollectorConfig) {
     if (typeof window === "undefined") {
-      // console.error(
-      //   "Userlens EventCollector error: unavailable outside of browser environment."
-      // );
+      console.error(
+        "Userlens EventCollector error: unavailable outside of browser environment."
+      );
       return;
     }
 
@@ -61,6 +61,7 @@ export default class EventCollector {
       intervalTime = 5000,
       skipRawEvents = false,
       useLighterSnapshot = false,
+      debug = false,
     } = config;
     const userTraits = (config as AutoUploadConfig).userTraits;
 
@@ -74,12 +75,16 @@ export default class EventCollector {
     }
 
     if (this.autoUploadModeEnabled && !userId?.length) {
-      // console.error("Userlens EventCollector error: userId is missing.");
+      if (this.debug) {
+        console.error("Userlens EventCollector error: userId is missing.");
+      }
       return;
     }
 
     if (this.autoUploadModeEnabled && !WRITE_CODE?.length) {
-      // console.error("Userlens EventCollector error: WRITE_CODE is missing.");
+      if (this.debug) {
+        console.error("Userlens EventCollector error: WRITE_CODE is missing.");
+      }
       return;
     }
 
@@ -88,9 +93,11 @@ export default class EventCollector {
     }
 
     if (!this.autoUploadModeEnabled && typeof callback !== "function") {
-      // console.error(
-      //   "Userlens EventCollector error: callback is not a function."
-      // );
+      if (this.debug) {
+        console.error(
+          "Userlens EventCollector error: callback is not a function."
+        );
+      }
       return;
     }
 
@@ -100,6 +107,7 @@ export default class EventCollector {
     this.callback = callback;
     this.intervalTime = intervalTime;
     this.events = [];
+    this.debug = debug;
 
     if (groupId) {
       this.groupId = groupId;
@@ -228,7 +236,15 @@ export default class EventCollector {
   }
 
   #initializeCollector() {
+    if (this.debug) {
+      console.log("Userlens EventCollector: adding click event listener");
+    }
+
     document.addEventListener("click", this.#boundClickHandler, true);
+
+    if (this.debug) {
+      console.log("Userlens EventCollector: click event listener added");
+    }
   }
 
   #handleClick(event: MouseEvent) {
@@ -262,10 +278,10 @@ export default class EventCollector {
         this.events = this.events.slice(-100);
       }
     } catch (err) {
-      // console.warn(
-      //   "Userlens EventCollector error: click event handling failed",
-      //   err
-      // );
+      console.warn(
+        "Userlens EventCollector error: click event handling failed",
+        err
+      );
     }
   }
 
