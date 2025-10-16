@@ -63,6 +63,8 @@ const UserlensProvider: React.FC<{
     } else {
       ecConfig = {
         userId: config?.userId,
+        groupId: config?.groupId,
+        groupTraits: config?.groupTraits,
         WRITE_CODE: config?.WRITE_CODE,
         userTraits: config?.userTraits,
         intervalTime: config?.eventCollector?.intervalTime,

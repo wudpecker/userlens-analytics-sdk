@@ -19,6 +19,8 @@ import { getUserlensVersion, saveWriteCode, getIsLocalhost } from "../utils";
 export default class EventCollector {
   private userId?: string;
   private userTraits?: Record<string, any>;
+  private groupId?: string;
+  private groupTraits?: Record<string, any>;
   private autoUploadModeEnabled!: Boolean;
   private useLighterSnapshot: boolean = false;
   private callback?: (
@@ -62,6 +64,9 @@ export default class EventCollector {
     } = config;
     const userTraits = (config as AutoUploadConfig).userTraits;
 
+    const groupId = (config as AutoUploadConfig).groupId;
+    const groupTraits = (config as AutoUploadConfig).groupTraits;
+
     if (callback) {
       this.autoUploadModeEnabled = false;
     } else {
@@ -95,6 +100,14 @@ export default class EventCollector {
     this.callback = callback;
     this.intervalTime = intervalTime;
     this.events = [];
+
+    if (groupId) {
+      this.groupId = groupId;
+      this.groupTraits =
+        typeof groupTraits === "object" && groupTraits !== null
+          ? groupTraits
+          : {};
+    }
 
     if (!skipRawEvents) {
       this.useLighterSnapshot = useLighterSnapshot;
@@ -135,6 +148,10 @@ export default class EventCollector {
 
   public updateUserTraits(newUserTraits: Record<string, any>) {
     this.userTraits = newUserTraits;
+  }
+
+  public updateGroupTraits(newGroupTraits: Record<string, any>) {
+    this.groupTraits = newGroupTraits;
   }
 
   public stop() {
@@ -476,6 +493,13 @@ export default class EventCollector {
     Promise.allSettled([
       this.userId && this.userTraits
         ? identify({ userId: this.userId, traits: this.userTraits })
+        : null,
+      this.groupId
+        ? group({
+            groupId: this.groupId,
+            traits: this.groupTraits,
+            userId: this.userId,
+          })
         : null,
       track(eventsToSend),
     ]);

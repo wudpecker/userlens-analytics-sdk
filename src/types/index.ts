@@ -4,6 +4,8 @@ export type AutoUploadConfig = {
   skipRawEvents?: boolean;
   WRITE_CODE: string;
   userTraits?: Record<string, any>;
+  groupTraits?: Record<string, any>;
+  groupId?: string;
   callback?: undefined;
   intervalTime?: number;
   useLighterSnapshot?: boolean;
@@ -106,6 +108,8 @@ export type UserlensProviderConfig = {
   WRITE_CODE: string;
   userId: string;
   userTraits: Record<string, any>;
+  groupTraits?: Record<string, any>;
+  groupId?: string;
   eventCollector: EventCollectorConfig;
   enableSessionReplay?: boolean;
   sessionRecorder?: SessionRecordingOptions;

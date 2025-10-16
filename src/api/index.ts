@@ -42,20 +42,20 @@ export const identify = async (user: {
 
 export const group = async (group: {
   groupId: string | number;
-  traits: Record<string, any>;
+  traits: Record<string, any> | undefined;
   userId?: string;
 }) => {
   if (!group?.groupId) return;
 
-  const { groupId, traits: groupTraits, userId } = group;
+  const { groupId, userId, traits: groupTraits } = group;
 
   const body = {
     type: "group",
     groupId,
-    ...(userId && { userId }),
     source: "userlens-js-analytics-sdk",
-    traits: groupTraits
-  }
+    ...(userId && { userId }),
+    ...(groupTraits && { traits: groupTraits }),
+  };
 
   const res = await fetch(`${MAIN_BASE_URL}/event`, {
     method: "POST",
@@ -63,13 +63,13 @@ export const group = async (group: {
       "Content-Type": "application/json",
       Authorization: `Basic ${getWriteCode()}`,
     },
-    body: JSON.stringify(body)
-  })
+    body: JSON.stringify(body),
+  });
 
   if (!res.ok) throw new Error("Userlens HTTP error: failed to identify");
 
   return "ok";
-}
+};
 
 export const track = async (
   events: (PushedEvent | PageViewEvent | RawEvent)[]
