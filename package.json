@@ -1,6 +1,6 @@
 {
   "name": "userlens-analytics-sdk",
-  "version": "0.1.84",
+  "version": "0.1.85",
   "main": "./dist/main.cjs.js",
   "module": "./dist/main.esm.js",
   "types": "./dist/types/index.d.ts",
@@ -43,6 +43,11 @@
   },
   "peerDependencies": {
     "react": ">=16.8.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@rrweb/rrweb-plugin-console-record": "^2.0.0-alpha.18",
