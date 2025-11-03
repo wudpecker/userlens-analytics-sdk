@@ -508,16 +508,19 @@ export default class EventCollector {
 
     Promise.allSettled([
       this.userId && this.userTraits
-        ? identify({ userId: this.userId, traits: this.userTraits })
+        ? identify({ userId: this.userId, traits: this.userTraits }, this.debug)
         : null,
       this.groupId
-        ? group({
-            groupId: this.groupId,
-            traits: this.groupTraits,
-            userId: this.userId,
-          })
+        ? group(
+            {
+              groupId: this.groupId,
+              traits: this.groupTraits,
+              userId: this.userId,
+            },
+            this.debug
+          )
         : null,
-      track(eventsToSend),
+      track(eventsToSend, this.debug),
     ]);
 
     this.#clearEvents();

@@ -6,16 +6,41 @@ const SESSIONS_BASE_URL = "https://sessions.userlens.io";
 
 import { PushedEvent, PageViewEvent, RawEvent } from "../types";
 
-const getWriteCode = () => {
-  const code = window.localStorage.getItem("$ul_WRITE_CODE");
-  return code;
+const getWriteCode = (): string | null => {
+  try {
+    const raw = window.localStorage.getItem("$ul_WRITE_CODE");
+    if (raw == null) return null;
+
+    const val = raw.trim();
+    if (!val) return null;
+
+    const lower = val.toLowerCase();
+    if (lower === "null" || lower === "undefined") return null;
+
+    return val;
+  } catch {
+    return null;
+  }
 };
 
-export const identify = async (user: {
-  userId: string | number;
-  traits: Record<string, any>;
-}) => {
+export const identify = async (
+  user: {
+    userId: string | number;
+    traits: Record<string, any>;
+  },
+  debug: boolean = false
+) => {
   if (!user?.userId) return;
+
+  const writeCode = getWriteCode();
+  if (!writeCode) {
+    if (debug) {
+      console.error(
+        "Failed to identify user: Userlens SDK error: WRITE_CODE is not set"
+      );
+    }
+    return;
+  }
 
   const userId = user.userId;
   const traits = user?.traits;
@@ -30,7 +55,7 @@ export const identify = async (user: {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Basic ${getWriteCode()}`,
+      Authorization: `Basic ${writeCode}`,
     },
     body: JSON.stringify(body),
   });
@@ -40,12 +65,24 @@ export const identify = async (user: {
   return "ok";
 };
 
-export const group = async (group: {
-  groupId: string | number;
-  traits: Record<string, any> | undefined;
-  userId?: string;
-}) => {
+export const group = async (
+  group: {
+    groupId: string | number;
+    traits: Record<string, any> | undefined;
+    userId?: string;
+  },
+  debug: boolean = false
+) => {
   if (!group?.groupId) return;
+  const writeCode = getWriteCode();
+  if (!writeCode) {
+    if (debug) {
+      console.error(
+        "Failed to group identify: Userlens SDK error: WRITE_CODE is not set"
+      );
+    }
+    return;
+  }
 
   const { groupId, userId, traits: groupTraits } = group;
 
@@ -61,7 +98,7 @@ export const group = async (group: {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Basic ${getWriteCode()}`,
+      Authorization: `Basic ${writeCode}`,
     },
     body: JSON.stringify(body),
   });
@@ -72,8 +109,19 @@ export const group = async (group: {
 };
 
 export const track = async (
-  events: (PushedEvent | PageViewEvent | RawEvent)[]
+  events: (PushedEvent | PageViewEvent | RawEvent)[],
+  debug: boolean = false
 ) => {
+  const writeCode = getWriteCode();
+  if (!writeCode) {
+    if (debug) {
+      console.error(
+        "Failed to group identify: Userlens SDK error: WRITE_CODE is not set"
+      );
+    }
+    return;
+  }
+
   const body = {
     events,
   };
@@ -82,7 +130,7 @@ export const track = async (
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Basic ${getWriteCode()}`,
+      Authorization: `Basic ${writeCode}`,
     },
     body: JSON.stringify(body),
   });
@@ -98,6 +146,11 @@ export const uploadSessionEvents = async (
   events: eventWithTime[],
   chunkTimestamp: number
 ) => {
+  const writeCode = getWriteCode();
+  if (!writeCode) {
+    return;
+  }
+
   const body = {
     userId: userId,
     chunk_timestamp: chunkTimestamp,
@@ -108,7 +161,7 @@ export const uploadSessionEvents = async (
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Basic ${getWriteCode()}`,
+      Authorization: `Basic ${writeCode}`,
     },
     body: JSON.stringify(body),
   });
