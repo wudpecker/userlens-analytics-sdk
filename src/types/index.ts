@@ -91,20 +91,6 @@ export interface PageViewEvent {
   properties: PageMetadata;
 }
 
-// SessionRecorder
-export type MaskingOption = "passwords" | "all";
-export interface SessionRecordingOptions {
-  TIMEOUT?: number;
-  BUFFER_SIZE?: number;
-  maskingOptions?: MaskingOption[];
-}
-
-export interface SessionRecorderConfig {
-  WRITE_CODE: string;
-  userId: string;
-  recordingOptions?: SessionRecordingOptions;
-}
-
 // react
 export type UserlensProviderConfig = {
   WRITE_CODE: string;
@@ -113,6 +99,4 @@ export type UserlensProviderConfig = {
   groupTraits?: Record<string, any>;
   groupId?: string;
   eventCollector: EventCollectorConfig;
-  enableSessionReplay?: boolean;
-  sessionRecorder?: SessionRecordingOptions;
 };

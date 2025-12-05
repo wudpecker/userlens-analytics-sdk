@@ -1,17 +1,14 @@
 import { createContext, useContext, useEffect, useState, useRef } from "react";
 
 import EventCollector from "../EventCollector";
-import SessionRecorder from "../SessionRecorder";
 import { UserlensProviderConfig, EventCollectorConfig } from "../types";
 
 type UserlensContextType = {
   collector: EventCollector | null;
-  sessionRecorder: SessionRecorder | null;
 };
 
 const UserlensContext = createContext<UserlensContextType>({
   collector: null,
-  sessionRecorder: null,
 });
 
 const UserlensProvider: React.FC<{
@@ -21,11 +18,8 @@ const UserlensProvider: React.FC<{
   const [eventCollector, setEventCollector] = useState<EventCollector | null>(
     null
   );
-  const [sessionRecorder, setSessionRecorder] =
-    useState<SessionRecorder | null>(null);
 
   const collectorRef = useRef<EventCollector | null>(null);
-  const sessionRecorderRef = useRef<SessionRecorder | null>(null);
 
   const lastUserIdRefEc = useRef<string | undefined>(undefined);
   useEffect(() => {
@@ -85,49 +79,10 @@ const UserlensProvider: React.FC<{
     eventCollector?.updateUserTraits(config?.userTraits);
   }, [config?.userTraits]);
 
-  const lastUserIdRefSr = useRef<string | undefined>(undefined);
-  useEffect(() => {
-    if (!config) {
-      console.error("UserlensProvider: config is required.");
-      return;
-    }
-
-    if (config?.enableSessionReplay === false) {
-      return;
-    }
-    if (!config?.WRITE_CODE || !config?.userId) {
-      console.error(
-        "UserlensProvider: WRITE_CODE and userId are required for session recording."
-      );
-      return;
-    }
-    if (lastUserIdRefSr?.current === config?.userId) {
-      return;
-    }
-    if (sessionRecorderRef?.current) {
-      console.warn("UserlensProvider: SessionRecorder already initialized.");
-      return;
-    }
-
-    lastUserIdRefSr.current = config?.userId;
-    const sr = new SessionRecorder({
-      WRITE_CODE: config?.WRITE_CODE,
-      userId: config?.userId,
-      recordingOptions: config?.sessionRecorder,
-    });
-    sessionRecorderRef.current = sr;
-    setSessionRecorder(sr);
-
-    return () => {
-      sr?.stop();
-    };
-  }, [config?.userId, config?.enableSessionReplay]);
-
   return (
     <UserlensContext.Provider
       value={{
         collector: eventCollector,
-        sessionRecorder: sessionRecorder,
       }}
     >
       {children}
