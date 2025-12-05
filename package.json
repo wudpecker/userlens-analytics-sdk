@@ -1,6 +1,6 @@
 {
   "name": "userlens-analytics-sdk",
-  "version": "0.1.87",
+  "version": "0.1.88",
   "main": "./dist/main.cjs.js",
   "module": "./dist/main.esm.js",
   "types": "./dist/types/index.d.ts",
@@ -39,6 +39,7 @@
     "react": "^16.14.0",
     "rollup": "^4.34.6",
     "rollup-plugin-dts": "^6.2.3",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
@@ -50,11 +51,9 @@
     }
   },
   "dependencies": {
-    "@rrweb/rrweb-plugin-console-record": "^2.0.0-alpha.18",
     "bowser": "^2.11.0",
     "chrome-dompath": "^2.0.1",
     "rollup-plugin-peer-deps-external": "^2.2.4",
-    "rrweb": "^2.0.0-alpha.4",
     "tslib": "^2.8.1"
   }
 }
