@@ -98,5 +98,5 @@ export type UserlensProviderConfig = {
   userTraits: Record<string, any>;
   groupTraits?: Record<string, any>;
   groupId?: string;
-  eventCollector: EventCollectorConfig;
+  eventCollector?: EventCollectorConfig;
 };
