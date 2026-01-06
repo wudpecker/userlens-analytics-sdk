@@ -6,13 +6,11 @@
 ## Getting Started
 
 * [React](docs/react.md)
+  * [Client-Side Setup](docs/react/client-side.md)
+  * [Proxy Setup](docs/react/proxy.md)
 * [Next.js](docs/nextjs.md)
-
-## Backend Proxy Setup
-
-* [Node.js / Express](docs/proxy-nodejs.md)
-* [Python (Flask / Django)](docs/proxy-python.md)
-* [Ruby on Rails](docs/proxy-rails.md)
+  * [Client-Side Setup](docs/nextjs/client-side.md)
+  * [Proxy Setup](docs/nextjs/proxy.md)
 
 ## Guides
 
