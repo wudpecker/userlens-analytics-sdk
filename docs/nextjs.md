@@ -18,19 +18,17 @@ yarn add userlens-analytics-sdk
 
 ## Choose Your Setup
 
-| | Proxy Setup | Frontend-Only Setup |
-|---|-------------|---------------------|
-| **Best for** | Production apps | Internal tools, prototypes |
-| **Ad blocker resistant** | Yes | No |
-| **API key location** | Server-side (secure) | Client-side (exposed) |
-| **Backend changes** | Uses Next.js API routes | None |
-| **Setup time** | ~15 minutes | ~5 minutes |
+| | Client-Side Setup | Proxy Setup |
+|---|-------------------|-------------|
+| **Best for** | Most applications | Apps needing ad blocker resistance |
+| **Backend changes** | None | Uses Next.js API routes |
+| **Setup time** | ~5 minutes | ~15 minutes |
 
 ---
 
 ## App Router (Next.js 13+)
 
-### Option A: Proxy Setup (Recommended)
+### Option A: Client-Side Setup (Quick to setup)
 
 #### Step 1: Create the Provider Component
 
@@ -48,6 +46,8 @@ type User = {
   email: string;
   name: string;
   plan: string;
+  role?: string;
+  createdAt?: string;
   companyId?: string;
   companyName?: string;
 };
@@ -63,25 +63,20 @@ export function UserlensWrapper({
     if (!user) return undefined;
 
     return {
+      WRITE_CODE: process.env.NEXT_PUBLIC_USERLENS_WRITE_CODE!,
       userId: user.id,
       userTraits: {
+        // User traits are important - pass as many as possible
         email: user.email,
         name: user.name,
         plan: user.plan,
+        role: user.role,
+        createdAt: user.createdAt,
       },
       groupId: user.companyId,
       groupTraits: user.companyId ? {
         name: user.companyName,
       } : undefined,
-      eventCollector: {
-        callback: (events) => {
-          fetch('/api/userlens/events', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(events),
-          });
-        },
-      },
     };
   }, [user?.id]);
 
@@ -122,6 +117,91 @@ export default async function RootLayout({
   );
 }
 ```
+
+#### Step 3: Add Environment Variable
+
+```bash
+# .env.local
+NEXT_PUBLIC_USERLENS_WRITE_CODE=your-write-code-here
+```
+
+---
+
+### Option B: Proxy Setup
+
+Use this if you need to avoid ad blockers.
+
+#### Step 1: Create the Provider Component
+
+```tsx
+// src/components/UserlensWrapper.tsx
+'use client';
+
+import { useMemo } from 'react';
+import UserlensProvider from 'userlens-analytics-sdk/react';
+
+type User = {
+  id: string;
+  email: string;
+  name: string;
+  plan: string;
+  role?: string;
+  createdAt?: string;
+  companyId?: string;
+  companyName?: string;
+};
+
+export function UserlensWrapper({
+  children,
+  user,
+}: {
+  children: React.ReactNode;
+  user: User | null;
+}) {
+  const config = useMemo(() => {
+    if (!user) return undefined;
+
+    return {
+      userId: user.id,
+      userTraits: {
+        // User traits are important - pass as many as possible
+        email: user.email,
+        name: user.name,
+        plan: user.plan,
+        role: user.role,
+        createdAt: user.createdAt,
+      },
+      groupId: user.companyId,
+      groupTraits: user.companyId ? {
+        name: user.companyName,
+      } : undefined,
+      eventCollector: {
+        callback: (events) => {
+          fetch('/api/userlens/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(events),
+          });
+        },
+      },
+    };
+  }, [user?.id]);
+
+  if (!config) {
+    return <>{children}</>;
+  }
+
+  return (
+    <UserlensProvider config={config}>
+      {children}
+    </UserlensProvider>
+  );
+}
+```
+
+#### Step 2: Add to Root Layout
+
+Same as client-side setup—add `UserlensWrapper` to your layout.
 
 #### Step 3: Create the API Route
 
@@ -176,75 +256,9 @@ USERLENS_WRITE_CODE=your-write-code-here
 
 ---
 
-### Option B: Frontend-Only Setup
-
-#### Step 1: Create the Provider Component
-
-```tsx
-// src/components/UserlensWrapper.tsx
-'use client';
-
-import { useMemo } from 'react';
-import UserlensProvider from 'userlens-analytics-sdk/react';
-
-type User = {
-  id: string;
-  email: string;
-  name: string;
-  plan: string;
-};
-
-export function UserlensWrapper({
-  children,
-  user,
-}: {
-  children: React.ReactNode;
-  user: User | null;
-}) {
-  const config = useMemo(() => {
-    if (!user) return undefined;
-
-    return {
-      WRITE_CODE: process.env.NEXT_PUBLIC_USERLENS_WRITE_CODE!,
-      userId: user.id,
-      userTraits: {
-        email: user.email,
-        name: user.name,
-        plan: user.plan,
-      },
-    };
-  }, [user?.id]);
-
-  if (!config) {
-    return <>{children}</>;
-  }
-
-  return (
-    <UserlensProvider config={config}>
-      {children}
-    </UserlensProvider>
-  );
-}
-```
-
-#### Step 2: Add to Root Layout
-
-Same as the proxy setup—add `UserlensWrapper` to your layout.
-
-#### Step 3: Add Environment Variable
-
-```bash
-# .env.local
-NEXT_PUBLIC_USERLENS_WRITE_CODE=your-write-code-here
-```
-
-> **Note:** The `NEXT_PUBLIC_` prefix exposes this variable to the browser.
-
----
-
 ## Pages Router (Next.js 12 and earlier)
 
-### Option A: Proxy Setup (Recommended)
+### Option A: Client-Side Setup (Quick to setup)
 
 #### Step 1: Create the Provider Component
 
@@ -261,20 +275,15 @@ export function UserlensWrapper({ children }: { children: React.ReactNode }) {
     if (!user) return undefined;
 
     return {
+      WRITE_CODE: process.env.NEXT_PUBLIC_USERLENS_WRITE_CODE!,
       userId: user.id,
       userTraits: {
+        // User traits are important - pass as many as possible
         email: user.email,
         name: user.name,
         plan: user.plan,
-      },
-      eventCollector: {
-        callback: (events) => {
-          fetch('/api/userlens/events', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(events),
-          });
-        },
+        role: user.role,
+        createdAt: user.createdAt,
       },
     };
   }, [user?.id]);
@@ -306,6 +315,71 @@ export default function App({ Component, pageProps }: AppProps) {
   );
 }
 ```
+
+#### Step 3: Add Environment Variable
+
+```bash
+# .env.local
+NEXT_PUBLIC_USERLENS_WRITE_CODE=your-write-code-here
+```
+
+---
+
+### Option B: Proxy Setup
+
+Use this if you need to avoid ad blockers.
+
+#### Step 1: Create the Provider Component
+
+```tsx
+// src/components/UserlensWrapper.tsx
+import { useMemo } from 'react';
+import UserlensProvider from 'userlens-analytics-sdk/react';
+import { useUser } from '@/hooks/useUser'; // Your auth hook
+
+export function UserlensWrapper({ children }: { children: React.ReactNode }) {
+  const { user } = useUser();
+
+  const config = useMemo(() => {
+    if (!user) return undefined;
+
+    return {
+      userId: user.id,
+      userTraits: {
+        // User traits are important - pass as many as possible
+        email: user.email,
+        name: user.name,
+        plan: user.plan,
+        role: user.role,
+        createdAt: user.createdAt,
+      },
+      eventCollector: {
+        callback: (events) => {
+          fetch('/api/userlens/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(events),
+          });
+        },
+      },
+    };
+  }, [user?.id]);
+
+  if (!config) {
+    return <>{children}</>;
+  }
+
+  return (
+    <UserlensProvider config={config}>
+      {children}
+    </UserlensProvider>
+  );
+}
+```
+
+#### Step 2: Add to _app.tsx
+
+Same as client-side setup.
 
 #### Step 3: Create the API Route
 
@@ -350,6 +424,13 @@ export default async function handler(
     return res.status(500).json({ error: 'Failed to track events' });
   }
 }
+```
+
+#### Step 4: Add Environment Variable
+
+```bash
+# .env.local
+USERLENS_WRITE_CODE=your-write-code-here
 ```
 
 ---

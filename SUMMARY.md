@@ -1,6 +1,7 @@
 # Table of contents
 
 * [Introduction](docs/introduction.md)
+* [Full Documentation](https://userlens.gitbook.io/userlens-analytics/)
 
 ## Getting Started
 

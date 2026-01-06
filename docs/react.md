@@ -18,26 +18,75 @@ yarn add userlens-analytics-sdk
 
 ## Choose Your Setup
 
-Before proceeding, decide which setup works best for your use case:
-
-| | Proxy Setup | Frontend-Only Setup |
-|---|-------------|---------------------|
-| **Best for** | Production apps | Internal tools, prototypes |
-| **Ad blocker resistant** | Yes | No |
-| **API key location** | Server-side (secure) | Client-side (exposed) |
-| **Backend changes** | Required | None |
-| **Setup time** | ~15 minutes | ~5 minutes |
+| | Client-Side Setup | Proxy Setup |
+|---|-------------------|-------------|
+| **Best for** | Most applications | Apps needing ad blocker resistance |
+| **Backend changes** | None | Required |
+| **Setup time** | ~5 minutes | ~15 minutes |
 
 ---
 
-## Option A: Proxy Setup (Recommended)
+## Option A: Client-Side Setup (Quick to setup)
 
-With the proxy setup, events are sent to your backend first, then forwarded to Userlens. This keeps your API key secure and avoids ad blockers.
+Events go directly from the browser to Userlens.
 
 ### Step 1: Get Your Write Code
 
 1. Go to [Userlens Settings](https://app.userlens.io/settings/userlens-sdk)
-2. Copy your **Write Code** (keep this secret—it goes on your server only)
+2. Copy your **Write Code**
+
+### Step 2: Add the Provider
+
+```tsx
+// src/App.tsx (or your root component)
+import { useMemo } from 'react';
+import UserlensProvider from 'userlens-analytics-sdk/react';
+
+function App() {
+  const userlensConfig = useMemo(() => ({
+    WRITE_CODE: 'your-write-code-here',  // From Userlens dashboard
+    userId: currentUser.id,               // Your user's unique identifier
+    userTraits: {
+      // User traits are important for analytics insights
+      // Pass as many as possible
+      email: currentUser.email,
+      name: currentUser.name,
+      plan: currentUser.plan,
+      role: currentUser.role,
+      createdAt: currentUser.createdAt,
+    },
+    // Optional: Associate user with a company (for B2B analytics)
+    groupId: currentUser.companyId,
+    groupTraits: {
+      name: currentUser.companyName,
+      industry: currentUser.companyIndustry,
+    },
+  }), [currentUser.id]);
+
+  return (
+    <UserlensProvider config={userlensConfig}>
+      <YourAppContent />
+    </UserlensProvider>
+  );
+}
+```
+
+### Step 3: Verify It's Working
+
+1. Open your app in the browser
+2. Click around on different elements
+3. In [Userlens](https://app.userlens.io), you should see activity within a few seconds
+
+---
+
+## Option B: Proxy Setup
+
+Events are sent to your backend first, then forwarded to Userlens. Use this if you need to avoid ad blockers.
+
+### Step 1: Get Your Write Code
+
+1. Go to [Userlens Settings](https://app.userlens.io/settings/userlens-sdk)
+2. Copy your **Write Code**
 
 ### Step 2: Add the Provider
 
@@ -50,11 +99,15 @@ import UserlensProvider from 'userlens-analytics-sdk/react';
 
 function App() {
   const userlensConfig = useMemo(() => ({
-    userId: currentUser.id,           // Your user's unique identifier
+    userId: currentUser.id,
     userTraits: {
-      email: currentUser.email,       // User properties for analytics
+      // User traits are important for analytics insights
+      // Pass as many as possible
+      email: currentUser.email,
       name: currentUser.name,
       plan: currentUser.plan,
+      role: currentUser.role,
+      createdAt: currentUser.createdAt,
     },
     // Optional: Associate user with a company (for B2B analytics)
     groupId: currentUser.companyId,
@@ -99,52 +152,22 @@ The events need to be forwarded from your backend to Userlens. Choose your backe
 
 ---
 
-## Option B: Frontend-Only Setup
+## User Traits
 
-With the frontend-only setup, events go directly from the browser to Userlens. Simpler to set up, but your Write Code will be visible in browser DevTools.
-
-### Step 1: Get Your Write Code
-
-1. Go to [Userlens Settings](https://app.userlens.io/settings/userlens-sdk)
-2. Copy your **Write Code**
-
-### Step 2: Add the Provider
+User traits are essential for getting meaningful insights from Userlens. Pass as many user properties as you have available:
 
 ```tsx
-// src/App.tsx (or your root component)
-import { useMemo } from 'react';
-import UserlensProvider from 'userlens-analytics-sdk/react';
-
-function App() {
-  const userlensConfig = useMemo(() => ({
-    WRITE_CODE: 'your-write-code-here',  // From Userlens dashboard
-    userId: currentUser.id,               // Your user's unique identifier
-    userTraits: {
-      email: currentUser.email,
-      name: currentUser.name,
-      plan: currentUser.plan,
-    },
-    // Optional: Associate user with a company
-    groupId: currentUser.companyId,
-    groupTraits: {
-      name: currentUser.companyName,
-      industry: currentUser.companyIndustry,
-    },
-  }), [currentUser.id]);
-
-  return (
-    <UserlensProvider config={userlensConfig}>
-      <YourAppContent />
-    </UserlensProvider>
-  );
+userTraits: {
+  email: currentUser.email,
+  name: currentUser.name,
+  plan: currentUser.plan,           // e.g., 'free', 'pro', 'enterprise'
+  role: currentUser.role,           // e.g., 'admin', 'member'
+  createdAt: currentUser.createdAt, // When the user signed up
+  // Add any other relevant properties
 }
 ```
 
-### Step 3: Verify It's Working
-
-1. Open your app in the browser
-2. Click around on different elements
-3. In [Userlens](https://app.userlens.io), you should see activity within a few seconds
+The more traits you provide, the better Userlens can segment and analyze user behavior.
 
 ---
 
@@ -156,7 +179,7 @@ function App() {
 |----------|------|----------|-------------|
 | `userId` | `string` | Yes | Unique identifier for the current user |
 | `userTraits` | `object` | Yes | User properties (email, name, plan, etc.) |
-| `WRITE_CODE` | `string` | Frontend-only | Your Userlens write code |
+| `WRITE_CODE` | `string` | Client-side only | Your Userlens write code |
 | `groupId` | `string` | No | Company/organization identifier (B2B) |
 | `groupTraits` | `object` | No | Company properties |
 | `eventCollector` | `object` | Proxy setup | EventCollector configuration |

@@ -38,23 +38,27 @@ collector?.pushEvent({
 
 All events are associated with the `userId` you provide.
 
+### User Traits
+
+Passing user traits is important for getting meaningful insights. Include as many properties as you have:
+
+```tsx
+userTraits: {
+  email: user.email,
+  name: user.name,
+  plan: user.plan,       // e.g., 'free', 'pro', 'enterprise'
+  role: user.role,       // e.g., 'admin', 'member'
+  createdAt: user.createdAt,
+}
+```
+
+The more traits you provide, the better Userlens can segment and analyze behavior.
+
 ---
 
 ## Setup Options
 
-### Proxy Setup (Recommended)
-
-Events are sent to your backend, which forwards them to Userlens.
-
-```
-Browser → Your Backend → Userlens API
-```
-
-- API key stays server-side
-- Not affected by ad blockers
-- Gives you control over the data pipeline
-
-### Frontend-Only Setup
+### Client-Side Setup (Quick to setup)
 
 Events are sent directly from the browser to Userlens.
 
@@ -62,9 +66,19 @@ Events are sent directly from the browser to Userlens.
 Browser → Userlens API
 ```
 
-- Simpler setup (no backend changes)
-- API key is exposed in browser
-- May be blocked by ad blockers
+- Simple setup, no backend changes required
+- Get started in minutes
+
+### Proxy Setup
+
+Events are sent to your backend, which forwards them to Userlens.
+
+```
+Browser → Your Backend → Userlens API
+```
+
+- Not affected by ad blockers
+- Gives you control over the data pipeline
 
 ---
 

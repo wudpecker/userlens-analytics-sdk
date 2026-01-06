@@ -2,6 +2,8 @@
 
 **Track everything. Decide what matters later.**
 
+📖 **[View Full Documentation](https://userlens.gitbook.io/userlens-analytics/)**
+
 The Userlens SDK automatically captures every user interaction in your web app. Define events later in the [Userlens platform](https://app.userlens.io)—no code changes required.
 
 ## Why Userlens?
@@ -63,14 +65,35 @@ For production apps, we recommend the proxy setup (keeps your API key secure, av
 
 ## Two Setup Options
 
-### Option A: Proxy Setup (Recommended)
+### Option A: Client-Side Setup (Quick to setup)
 
-Events flow through your backend → Userlens API
+Events go directly to Userlens API.
+
+```tsx
+<UserlensProvider config={{
+  WRITE_CODE: 'your-write-code',
+  userId: user.id,
+  userTraits: {
+    email: user.email,
+    name: user.name,
+    plan: user.plan,
+    // Add as many traits as possible for better insights
+  },
+}}>
+```
+
+### Option B: Proxy Setup
+
+Events flow through your backend → Userlens API. Useful if you want to avoid ad blockers.
 
 ```tsx
 <UserlensProvider config={{
   userId: user.id,
-  userTraits: { email: user.email },
+  userTraits: {
+    email: user.email,
+    name: user.name,
+    plan: user.plan,
+  },
   eventCollector: {
     callback: (events) => {
       fetch('/api/userlens/events', {
@@ -79,18 +102,6 @@ Events flow through your backend → Userlens API
       });
     },
   },
-}}>
-```
-
-### Option B: Frontend-Only Setup
-
-Events go directly to Userlens API
-
-```tsx
-<UserlensProvider config={{
-  WRITE_CODE: 'your-write-code',
-  userId: user.id,
-  userTraits: { email: user.email },
 }}>
 ```
 
