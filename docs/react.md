@@ -8,12 +8,6 @@ This guide walks you through integrating the Userlens SDK into a React applicati
 npm install userlens-analytics-sdk
 ```
 
-or with yarn:
-
-```bash
-yarn add userlens-analytics-sdk
-```
-
 ---
 
 ## Choose Your Setup
@@ -37,31 +31,75 @@ Events go directly from the browser to Userlens.
 
 ### Step 2: Add the Provider
 
+Choose your React version and auth setup:
+
+{% tabs %}
+{% tab title="React 19+ (Compiler)" %}
+With React Compiler, you don't need `useMemo`:
+
 ```tsx
-// src/App.tsx (or your root component)
+// src/App.tsx
+import UserlensProvider from 'userlens-analytics-sdk/react';
+
+function App() {
+  const user = useCurrentUser(); // Your auth hook
+
+  if (!user) return <AuthScreen />;
+
+  return (
+    <UserlensProvider config={{
+      WRITE_CODE: 'your-write-code-here',
+      userId: user.id,
+      userTraits: {
+        email: user.email,
+        name: user.name,
+        plan: user.plan,
+        role: user.role,
+        createdAt: user.createdAt,
+      },
+      groupId: user.companyId,
+      groupTraits: {
+        name: user.companyName,
+      },
+    }}>
+      <YourAppContent />
+    </UserlensProvider>
+  );
+}
+```
+{% endtab %}
+
+{% tab title="React 18 and below" %}
+Use `useMemo` to prevent unnecessary re-renders:
+
+```tsx
+// src/App.tsx
 import { useMemo } from 'react';
 import UserlensProvider from 'userlens-analytics-sdk/react';
 
 function App() {
-  const userlensConfig = useMemo(() => ({
-    WRITE_CODE: 'your-write-code-here',  // From Userlens dashboard
-    userId: currentUser.id,               // Your user's unique identifier
-    userTraits: {
-      // User traits are important for analytics insights
-      // Pass as many as possible
-      email: currentUser.email,
-      name: currentUser.name,
-      plan: currentUser.plan,
-      role: currentUser.role,
-      createdAt: currentUser.createdAt,
-    },
-    // Optional: Associate user with a company (for B2B analytics)
-    groupId: currentUser.companyId,
-    groupTraits: {
-      name: currentUser.companyName,
-      industry: currentUser.companyIndustry,
-    },
-  }), [currentUser.id]);
+  const user = useCurrentUser(); // Your auth hook
+
+  const userlensConfig = useMemo(() => {
+    if (!user) return undefined;
+    return {
+      WRITE_CODE: 'your-write-code-here',
+      userId: user.id,
+      userTraits: {
+        email: user.email,
+        name: user.name,
+        plan: user.plan,
+        role: user.role,
+        createdAt: user.createdAt,
+      },
+      groupId: user.companyId,
+      groupTraits: {
+        name: user.companyName,
+      },
+    };
+  }, [user?.id]);
+
+  if (!userlensConfig) return <AuthScreen />;
 
   return (
     <UserlensProvider config={userlensConfig}>
@@ -70,6 +108,159 @@ function App() {
   );
 }
 ```
+{% endtab %}
+{% endtabs %}
+
+#### Auth Provider Examples
+
+{% tabs %}
+{% tab title="NextAuth" %}
+```tsx
+import { useSession } from 'next-auth/react';
+import UserlensProvider from 'userlens-analytics-sdk/react';
+
+function App({ children }) {
+  const { data: session } = useSession();
+
+  if (!session?.user) return <>{children}</>;
+
+  return (
+    <UserlensProvider config={{
+      WRITE_CODE: 'your-write-code-here',
+      userId: session.user.id,
+      userTraits: {
+        email: session.user.email,
+        name: session.user.name,
+        image: session.user.image,
+      },
+    }}>
+      {children}
+    </UserlensProvider>
+  );
+}
+```
+{% endtab %}
+
+{% tab title="Clerk" %}
+```tsx
+import { useUser } from '@clerk/clerk-react';
+import UserlensProvider from 'userlens-analytics-sdk/react';
+
+function App({ children }) {
+  const { user, isLoaded } = useUser();
+
+  if (!isLoaded || !user) return <>{children}</>;
+
+  return (
+    <UserlensProvider config={{
+      WRITE_CODE: 'your-write-code-here',
+      userId: user.id,
+      userTraits: {
+        email: user.primaryEmailAddress?.emailAddress,
+        name: user.fullName,
+        imageUrl: user.imageUrl,
+        createdAt: user.createdAt,
+      },
+    }}>
+      {children}
+    </UserlensProvider>
+  );
+}
+```
+{% endtab %}
+
+{% tab title="Supabase" %}
+```tsx
+import { useUser } from '@supabase/auth-helpers-react';
+import UserlensProvider from 'userlens-analytics-sdk/react';
+
+function App({ children }) {
+  const user = useUser();
+
+  if (!user) return <>{children}</>;
+
+  return (
+    <UserlensProvider config={{
+      WRITE_CODE: 'your-write-code-here',
+      userId: user.id,
+      userTraits: {
+        email: user.email,
+        createdAt: user.created_at,
+        // Add custom metadata if you have it
+        ...user.user_metadata,
+      },
+    }}>
+      {children}
+    </UserlensProvider>
+  );
+}
+```
+{% endtab %}
+
+{% tab title="Firebase" %}
+```tsx
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from './firebase';
+import UserlensProvider from 'userlens-analytics-sdk/react';
+
+function App({ children }) {
+  const [user, loading] = useAuthState(auth);
+
+  if (loading || !user) return <>{children}</>;
+
+  return (
+    <UserlensProvider config={{
+      WRITE_CODE: 'your-write-code-here',
+      userId: user.uid,
+      userTraits: {
+        email: user.email,
+        name: user.displayName,
+        photoURL: user.photoURL,
+        createdAt: user.metadata.creationTime,
+      },
+    }}>
+      {children}
+    </UserlensProvider>
+  );
+}
+```
+{% endtab %}
+
+{% tab title="Custom Hook" %}
+```tsx
+import { useAuth } from './hooks/useAuth'; // Your custom hook
+import UserlensProvider from 'userlens-analytics-sdk/react';
+
+function App({ children }) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading || !user) return <>{children}</>;
+
+  return (
+    <UserlensProvider config={{
+      WRITE_CODE: 'your-write-code-here',
+      userId: user.id,
+      userTraits: {
+        email: user.email,
+        name: user.name,
+        plan: user.plan,
+        role: user.role,
+        createdAt: user.createdAt,
+      },
+      // For B2B: associate user with company
+      groupId: user.organizationId,
+      groupTraits: {
+        name: user.organizationName,
+        plan: user.organizationPlan,
+      },
+    }}>
+      {children}
+    </UserlensProvider>
+  );
+}
+```
+{% endtab %}
+{% endtabs %}
 
 ### Step 3: Verify It's Working
 
@@ -86,46 +277,89 @@ Events are sent to your backend first, then forwarded to Userlens. Use this if y
 ### Step 1: Get Your Write Code
 
 1. Go to [Userlens Settings](https://app.userlens.io/settings/userlens-sdk)
-2. Copy your **Write Code**
+2. Copy your **Write Code** (this will be used on your server)
 
 ### Step 2: Add the Provider
 
-Wrap your app with `UserlensProvider` at the root level:
-
+{% tabs %}
+{% tab title="React 19+ (Compiler)" %}
 ```tsx
-// src/App.tsx (or your root component)
+// src/App.tsx
+import UserlensProvider from 'userlens-analytics-sdk/react';
+
+function App() {
+  const user = useCurrentUser();
+
+  if (!user) return <AuthScreen />;
+
+  return (
+    <UserlensProvider config={{
+      userId: user.id,
+      userTraits: {
+        email: user.email,
+        name: user.name,
+        plan: user.plan,
+        role: user.role,
+        createdAt: user.createdAt,
+      },
+      groupId: user.companyId,
+      groupTraits: {
+        name: user.companyName,
+      },
+      eventCollector: {
+        callback: (events) => {
+          fetch('/api/userlens/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(events),
+          });
+        },
+      },
+    }}>
+      <YourAppContent />
+    </UserlensProvider>
+  );
+}
+```
+{% endtab %}
+
+{% tab title="React 18 and below" %}
+```tsx
+// src/App.tsx
 import { useMemo } from 'react';
 import UserlensProvider from 'userlens-analytics-sdk/react';
 
 function App() {
-  const userlensConfig = useMemo(() => ({
-    userId: currentUser.id,
-    userTraits: {
-      // User traits are important for analytics insights
-      // Pass as many as possible
-      email: currentUser.email,
-      name: currentUser.name,
-      plan: currentUser.plan,
-      role: currentUser.role,
-      createdAt: currentUser.createdAt,
-    },
-    // Optional: Associate user with a company (for B2B analytics)
-    groupId: currentUser.companyId,
-    groupTraits: {
-      name: currentUser.companyName,
-      industry: currentUser.companyIndustry,
-    },
-    eventCollector: {
-      callback: (events) => {
-        // Send events to YOUR backend
-        fetch('/api/userlens/events', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(events),
-        });
+  const user = useCurrentUser();
+
+  const userlensConfig = useMemo(() => {
+    if (!user) return undefined;
+    return {
+      userId: user.id,
+      userTraits: {
+        email: user.email,
+        name: user.name,
+        plan: user.plan,
+        role: user.role,
+        createdAt: user.createdAt,
       },
-    },
-  }), [currentUser.id]); // Re-initialize only when user changes
+      groupId: user.companyId,
+      groupTraits: {
+        name: user.companyName,
+      },
+      eventCollector: {
+        callback: (events) => {
+          fetch('/api/userlens/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(events),
+          });
+        },
+      },
+    };
+  }, [user?.id]);
+
+  if (!userlensConfig) return <AuthScreen />;
 
   return (
     <UserlensProvider config={userlensConfig}>
@@ -134,10 +368,12 @@ function App() {
   );
 }
 ```
+{% endtab %}
+{% endtabs %}
 
 ### Step 3: Set Up Your Backend
 
-The events need to be forwarded from your backend to Userlens. Choose your backend:
+Choose your backend:
 
 - **[Node.js/Express](./proxy-nodejs.md)**
 - **[Python (Flask/Django)](./proxy-python.md)**
@@ -158,12 +394,21 @@ User traits are essential for getting meaningful insights from Userlens. Pass as
 
 ```tsx
 userTraits: {
-  email: currentUser.email,
-  name: currentUser.name,
-  plan: currentUser.plan,           // e.g., 'free', 'pro', 'enterprise'
-  role: currentUser.role,           // e.g., 'admin', 'member'
-  createdAt: currentUser.createdAt, // When the user signed up
-  // Add any other relevant properties
+  // Basics
+  email: user.email,
+  name: user.name,
+
+  // Subscription info
+  plan: user.plan,           // 'free', 'pro', 'enterprise'
+  role: user.role,           // 'admin', 'member', 'viewer'
+
+  // Dates
+  createdAt: user.createdAt,
+  lastLoginAt: user.lastLoginAt,
+
+  // Any other relevant properties
+  department: user.department,
+  jobTitle: user.jobTitle,
 }
 ```
 
@@ -195,39 +440,6 @@ The more traits you provide, the better Userlens can segment and analyze user be
 
 ---
 
-## Handling User Changes (Login/Logout)
-
-The SDK re-initializes when `userId` changes. This is handled automatically when you include `userId` in the `useMemo` dependency array:
-
-```tsx
-const userlensConfig = useMemo(() => ({
-  userId: currentUser?.id,
-  userTraits: { ... },
-  // ...
-}), [currentUser?.id]); // Re-creates config when user changes
-```
-
-**For logout:** When the user logs out, you can either:
-1. Stop rendering the provider (recommended)
-2. Pass `undefined` as userId
-
-```tsx
-// Option 1: Conditionally render
-{currentUser && (
-  <UserlensProvider config={userlensConfig}>
-    <App />
-  </UserlensProvider>
-)}
-
-// Option 2: Handle in config
-const userlensConfig = useMemo(() => {
-  if (!currentUser) return undefined;
-  return { userId: currentUser.id, ... };
-}, [currentUser?.id]);
-```
-
----
-
 ## Using the Hook
 
 Access the SDK from any component using the `useUserlens` hook:
@@ -235,11 +447,10 @@ Access the SDK from any component using the `useUserlens` hook:
 ```tsx
 import { useUserlens } from 'userlens-analytics-sdk/react';
 
-function MyComponent() {
+function UpgradeButton() {
   const { collector } = useUserlens();
 
   const handleUpgrade = () => {
-    // Track a custom event
     collector?.pushEvent({
       event: 'Plan Upgraded',
       properties: {

@@ -8,12 +8,6 @@ This guide covers integrating the Userlens SDK into Next.js applications, includ
 npm install userlens-analytics-sdk
 ```
 
-or with yarn:
-
-```bash
-yarn add userlens-analytics-sdk
-```
-
 ---
 
 ## Choose Your Setup
@@ -30,22 +24,158 @@ yarn add userlens-analytics-sdk
 
 ### Option A: Client-Side Setup (Quick to setup)
 
-#### Step 1: Create the Provider Component
+#### Step 1: Get Your Write Code
+
+1. Go to [Userlens Settings](https://app.userlens.io/settings/userlens-sdk)
+2. Copy your **Write Code**
+
+#### Step 2: Create the Provider Component
 
 The Userlens SDK requires browser APIs, so it must run as a Client Component.
 
+{% tabs %}
+{% tab title="NextAuth" %}
 ```tsx
 // src/components/UserlensWrapper.tsx
 'use client';
 
-import { useMemo } from 'react';
+import { useSession } from 'next-auth/react';
+import UserlensProvider from 'userlens-analytics-sdk/react';
+
+export function UserlensWrapper({ children }: { children: React.ReactNode }) {
+  const { data: session } = useSession();
+
+  if (!session?.user) return <>{children}</>;
+
+  return (
+    <UserlensProvider config={{
+      WRITE_CODE: process.env.NEXT_PUBLIC_USERLENS_WRITE_CODE!,
+      userId: session.user.id,
+      userTraits: {
+        email: session.user.email,
+        name: session.user.name,
+        image: session.user.image,
+      },
+    }}>
+      {children}
+    </UserlensProvider>
+  );
+}
+```
+{% endtab %}
+
+{% tab title="Clerk" %}
+```tsx
+// src/components/UserlensWrapper.tsx
+'use client';
+
+import { useUser } from '@clerk/nextjs';
+import UserlensProvider from 'userlens-analytics-sdk/react';
+
+export function UserlensWrapper({ children }: { children: React.ReactNode }) {
+  const { user, isLoaded } = useUser();
+
+  if (!isLoaded || !user) return <>{children}</>;
+
+  return (
+    <UserlensProvider config={{
+      WRITE_CODE: process.env.NEXT_PUBLIC_USERLENS_WRITE_CODE!,
+      userId: user.id,
+      userTraits: {
+        email: user.primaryEmailAddress?.emailAddress,
+        name: user.fullName,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        imageUrl: user.imageUrl,
+        createdAt: user.createdAt,
+      },
+      // If using Clerk organizations
+      groupId: user.organizationMemberships?.[0]?.organization?.id,
+      groupTraits: {
+        name: user.organizationMemberships?.[0]?.organization?.name,
+      },
+    }}>
+      {children}
+    </UserlensProvider>
+  );
+}
+```
+{% endtab %}
+
+{% tab title="Supabase" %}
+```tsx
+// src/components/UserlensWrapper.tsx
+'use client';
+
+import { useUser } from '@supabase/auth-helpers-react';
+import UserlensProvider from 'userlens-analytics-sdk/react';
+
+export function UserlensWrapper({ children }: { children: React.ReactNode }) {
+  const user = useUser();
+
+  if (!user) return <>{children}</>;
+
+  return (
+    <UserlensProvider config={{
+      WRITE_CODE: process.env.NEXT_PUBLIC_USERLENS_WRITE_CODE!,
+      userId: user.id,
+      userTraits: {
+        email: user.email,
+        createdAt: user.created_at,
+        ...user.user_metadata,
+      },
+    }}>
+      {children}
+    </UserlensProvider>
+  );
+}
+```
+{% endtab %}
+
+{% tab title="Firebase" %}
+```tsx
+// src/components/UserlensWrapper.tsx
+'use client';
+
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase';
+import UserlensProvider from 'userlens-analytics-sdk/react';
+
+export function UserlensWrapper({ children }: { children: React.ReactNode }) {
+  const [user, loading] = useAuthState(auth);
+
+  if (loading || !user) return <>{children}</>;
+
+  return (
+    <UserlensProvider config={{
+      WRITE_CODE: process.env.NEXT_PUBLIC_USERLENS_WRITE_CODE!,
+      userId: user.uid,
+      userTraits: {
+        email: user.email,
+        name: user.displayName,
+        photoURL: user.photoURL,
+        createdAt: user.metadata.creationTime,
+      },
+    }}>
+      {children}
+    </UserlensProvider>
+  );
+}
+```
+{% endtab %}
+
+{% tab title="Custom / Server Component" %}
+```tsx
+// src/components/UserlensWrapper.tsx
+'use client';
+
 import UserlensProvider from 'userlens-analytics-sdk/react';
 
 type User = {
   id: string;
   email: string;
   name: string;
-  plan: string;
+  plan?: string;
   role?: string;
   createdAt?: string;
   companyId?: string;
@@ -59,14 +189,13 @@ export function UserlensWrapper({
   children: React.ReactNode;
   user: User | null;
 }) {
-  const config = useMemo(() => {
-    if (!user) return undefined;
+  if (!user) return <>{children}</>;
 
-    return {
+  return (
+    <UserlensProvider config={{
       WRITE_CODE: process.env.NEXT_PUBLIC_USERLENS_WRITE_CODE!,
       userId: user.id,
       userTraits: {
-        // User traits are important - pass as many as possible
         email: user.email,
         name: user.name,
         plan: user.plan,
@@ -74,30 +203,22 @@ export function UserlensWrapper({
         createdAt: user.createdAt,
       },
       groupId: user.companyId,
-      groupTraits: user.companyId ? {
+      groupTraits: {
         name: user.companyName,
-      } : undefined,
-    };
-  }, [user?.id]);
-
-  if (!config) {
-    return <>{children}</>;
-  }
-
-  return (
-    <UserlensProvider config={config}>
+      },
+    }}>
       {children}
     </UserlensProvider>
   );
 }
 ```
 
-#### Step 2: Add to Root Layout
+Then in your layout, fetch user server-side:
 
 ```tsx
 // src/app/layout.tsx
 import { UserlensWrapper } from '@/components/UserlensWrapper';
-import { getCurrentUser } from '@/lib/auth'; // Your auth logic
+import { getCurrentUser } from '@/lib/auth';
 
 export default async function RootLayout({
   children,
@@ -117,8 +238,68 @@ export default async function RootLayout({
   );
 }
 ```
+{% endtab %}
+{% endtabs %}
 
-#### Step 3: Add Environment Variable
+#### Step 3: Add to Root Layout
+
+{% tabs %}
+{% tab title="With Auth Provider Hook" %}
+If you're using NextAuth, Clerk, Supabase, or Firebase hooks:
+
+```tsx
+// src/app/layout.tsx
+import { UserlensWrapper } from '@/components/UserlensWrapper';
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        {/* Your auth provider should wrap this */}
+        <UserlensWrapper>
+          {children}
+        </UserlensWrapper>
+      </body>
+    </html>
+  );
+}
+```
+{% endtab %}
+
+{% tab title="With Server-Side User" %}
+If you're fetching user data server-side:
+
+```tsx
+// src/app/layout.tsx
+import { UserlensWrapper } from '@/components/UserlensWrapper';
+import { getCurrentUser } from '@/lib/auth';
+
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const user = await getCurrentUser();
+
+  return (
+    <html lang="en">
+      <body>
+        <UserlensWrapper user={user}>
+          {children}
+        </UserlensWrapper>
+      </body>
+    </html>
+  );
+}
+```
+{% endtab %}
+{% endtabs %}
+
+#### Step 4: Add Environment Variable
 
 ```bash
 # .env.local
@@ -129,22 +310,144 @@ NEXT_PUBLIC_USERLENS_WRITE_CODE=your-write-code-here
 
 ### Option B: Proxy Setup
 
-Use this if you need to avoid ad blockers.
+Use this if you need to avoid ad blockers. Events go through your Next.js API route.
 
 #### Step 1: Create the Provider Component
 
+{% tabs %}
+{% tab title="NextAuth" %}
 ```tsx
 // src/components/UserlensWrapper.tsx
 'use client';
 
-import { useMemo } from 'react';
+import { useSession } from 'next-auth/react';
+import UserlensProvider from 'userlens-analytics-sdk/react';
+
+export function UserlensWrapper({ children }: { children: React.ReactNode }) {
+  const { data: session } = useSession();
+
+  if (!session?.user) return <>{children}</>;
+
+  return (
+    <UserlensProvider config={{
+      userId: session.user.id,
+      userTraits: {
+        email: session.user.email,
+        name: session.user.name,
+        image: session.user.image,
+      },
+      eventCollector: {
+        callback: (events) => {
+          fetch('/api/userlens/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(events),
+          });
+        },
+      },
+    }}>
+      {children}
+    </UserlensProvider>
+  );
+}
+```
+{% endtab %}
+
+{% tab title="Clerk" %}
+```tsx
+// src/components/UserlensWrapper.tsx
+'use client';
+
+import { useUser } from '@clerk/nextjs';
+import UserlensProvider from 'userlens-analytics-sdk/react';
+
+export function UserlensWrapper({ children }: { children: React.ReactNode }) {
+  const { user, isLoaded } = useUser();
+
+  if (!isLoaded || !user) return <>{children}</>;
+
+  return (
+    <UserlensProvider config={{
+      userId: user.id,
+      userTraits: {
+        email: user.primaryEmailAddress?.emailAddress,
+        name: user.fullName,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        imageUrl: user.imageUrl,
+        createdAt: user.createdAt,
+      },
+      groupId: user.organizationMemberships?.[0]?.organization?.id,
+      groupTraits: {
+        name: user.organizationMemberships?.[0]?.organization?.name,
+      },
+      eventCollector: {
+        callback: (events) => {
+          fetch('/api/userlens/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(events),
+          });
+        },
+      },
+    }}>
+      {children}
+    </UserlensProvider>
+  );
+}
+```
+{% endtab %}
+
+{% tab title="Supabase" %}
+```tsx
+// src/components/UserlensWrapper.tsx
+'use client';
+
+import { useUser } from '@supabase/auth-helpers-react';
+import UserlensProvider from 'userlens-analytics-sdk/react';
+
+export function UserlensWrapper({ children }: { children: React.ReactNode }) {
+  const user = useUser();
+
+  if (!user) return <>{children}</>;
+
+  return (
+    <UserlensProvider config={{
+      userId: user.id,
+      userTraits: {
+        email: user.email,
+        createdAt: user.created_at,
+        ...user.user_metadata,
+      },
+      eventCollector: {
+        callback: (events) => {
+          fetch('/api/userlens/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(events),
+          });
+        },
+      },
+    }}>
+      {children}
+    </UserlensProvider>
+  );
+}
+```
+{% endtab %}
+
+{% tab title="Custom / Server Component" %}
+```tsx
+// src/components/UserlensWrapper.tsx
+'use client';
+
 import UserlensProvider from 'userlens-analytics-sdk/react';
 
 type User = {
   id: string;
   email: string;
   name: string;
-  plan: string;
+  plan?: string;
   role?: string;
   createdAt?: string;
   companyId?: string;
@@ -158,13 +461,12 @@ export function UserlensWrapper({
   children: React.ReactNode;
   user: User | null;
 }) {
-  const config = useMemo(() => {
-    if (!user) return undefined;
+  if (!user) return <>{children}</>;
 
-    return {
+  return (
+    <UserlensProvider config={{
       userId: user.id,
       userTraits: {
-        // User traits are important - pass as many as possible
         email: user.email,
         name: user.name,
         plan: user.plan,
@@ -172,9 +474,9 @@ export function UserlensWrapper({
         createdAt: user.createdAt,
       },
       groupId: user.companyId,
-      groupTraits: user.companyId ? {
+      groupTraits: {
         name: user.companyName,
-      } : undefined,
+      },
       eventCollector: {
         callback: (events) => {
           fetch('/api/userlens/events', {
@@ -184,26 +486,16 @@ export function UserlensWrapper({
           });
         },
       },
-    };
-  }, [user?.id]);
-
-  if (!config) {
-    return <>{children}</>;
-  }
-
-  return (
-    <UserlensProvider config={config}>
+    }}>
       {children}
     </UserlensProvider>
   );
 }
 ```
+{% endtab %}
+{% endtabs %}
 
-#### Step 2: Add to Root Layout
-
-Same as client-side setup—add `UserlensWrapper` to your layout.
-
-#### Step 3: Create the API Route
+#### Step 2: Create the API Route
 
 ```ts
 // src/app/api/userlens/events/route.ts
@@ -247,7 +539,7 @@ export async function POST(request: NextRequest) {
 }
 ```
 
-#### Step 4: Add Environment Variable
+#### Step 3: Add Environment Variable
 
 ```bash
 # .env.local
@@ -262,43 +554,64 @@ USERLENS_WRITE_CODE=your-write-code-here
 
 #### Step 1: Create the Provider Component
 
+{% tabs %}
+{% tab title="NextAuth" %}
 ```tsx
 // src/components/UserlensWrapper.tsx
-import { useMemo } from 'react';
+import { useSession } from 'next-auth/react';
 import UserlensProvider from 'userlens-analytics-sdk/react';
-import { useUser } from '@/hooks/useUser'; // Your auth hook
 
 export function UserlensWrapper({ children }: { children: React.ReactNode }) {
-  const { user } = useUser();
+  const { data: session } = useSession();
 
-  const config = useMemo(() => {
-    if (!user) return undefined;
+  if (!session?.user) return <>{children}</>;
 
-    return {
+  return (
+    <UserlensProvider config={{
+      WRITE_CODE: process.env.NEXT_PUBLIC_USERLENS_WRITE_CODE!,
+      userId: session.user.id,
+      userTraits: {
+        email: session.user.email,
+        name: session.user.name,
+      },
+    }}>
+      {children}
+    </UserlensProvider>
+  );
+}
+```
+{% endtab %}
+
+{% tab title="Custom Hook" %}
+```tsx
+// src/components/UserlensWrapper.tsx
+import { useAuth } from '@/hooks/useAuth';
+import UserlensProvider from 'userlens-analytics-sdk/react';
+
+export function UserlensWrapper({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading || !user) return <>{children}</>;
+
+  return (
+    <UserlensProvider config={{
       WRITE_CODE: process.env.NEXT_PUBLIC_USERLENS_WRITE_CODE!,
       userId: user.id,
       userTraits: {
-        // User traits are important - pass as many as possible
         email: user.email,
         name: user.name,
         plan: user.plan,
         role: user.role,
         createdAt: user.createdAt,
       },
-    };
-  }, [user?.id]);
-
-  if (!config) {
-    return <>{children}</>;
-  }
-
-  return (
-    <UserlensProvider config={config}>
+    }}>
       {children}
     </UserlensProvider>
   );
 }
 ```
+{% endtab %}
+{% endtabs %}
 
 #### Step 2: Add to _app.tsx
 
@@ -327,31 +640,27 @@ NEXT_PUBLIC_USERLENS_WRITE_CODE=your-write-code-here
 
 ### Option B: Proxy Setup
 
-Use this if you need to avoid ad blockers.
-
 #### Step 1: Create the Provider Component
+
+Same as client-side, but remove `WRITE_CODE` and add `eventCollector`:
 
 ```tsx
 // src/components/UserlensWrapper.tsx
-import { useMemo } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import UserlensProvider from 'userlens-analytics-sdk/react';
-import { useUser } from '@/hooks/useUser'; // Your auth hook
 
 export function UserlensWrapper({ children }: { children: React.ReactNode }) {
-  const { user } = useUser();
+  const { user, isLoading } = useAuth();
 
-  const config = useMemo(() => {
-    if (!user) return undefined;
+  if (isLoading || !user) return <>{children}</>;
 
-    return {
+  return (
+    <UserlensProvider config={{
       userId: user.id,
       userTraits: {
-        // User traits are important - pass as many as possible
         email: user.email,
         name: user.name,
         plan: user.plan,
-        role: user.role,
-        createdAt: user.createdAt,
       },
       eventCollector: {
         callback: (events) => {
@@ -362,26 +671,14 @@ export function UserlensWrapper({ children }: { children: React.ReactNode }) {
           });
         },
       },
-    };
-  }, [user?.id]);
-
-  if (!config) {
-    return <>{children}</>;
-  }
-
-  return (
-    <UserlensProvider config={config}>
+    }}>
       {children}
     </UserlensProvider>
   );
 }
 ```
 
-#### Step 2: Add to _app.tsx
-
-Same as client-side setup.
-
-#### Step 3: Create the API Route
+#### Step 2: Create the API Route
 
 ```ts
 // src/pages/api/userlens/events.ts
@@ -426,7 +723,7 @@ export default async function handler(
 }
 ```
 
-#### Step 4: Add Environment Variable
+#### Step 3: Add Environment Variable
 
 ```bash
 # .env.local
@@ -435,7 +732,7 @@ USERLENS_WRITE_CODE=your-write-code-here
 
 ---
 
-## Using the Hook in Components
+## Using the Hook
 
 Access the SDK from any Client Component:
 
@@ -462,21 +759,22 @@ export function UpgradeButton() {
 
 ---
 
-## Advanced: Identify User After Login
+## User Traits
 
-If the user logs in after the page loads, update the provider:
+Pass as many user properties as you have available:
 
 ```tsx
-// The provider will reinitialize when userId changes
-const config = useMemo(() => ({
-  userId: session?.user?.id,  // undefined → user ID triggers reinitialization
-  userTraits: session?.user ? {
-    email: session.user.email,
-    name: session.user.name,
-  } : {},
-  // ...
-}), [session?.user?.id]);
+userTraits: {
+  email: user.email,
+  name: user.name,
+  plan: user.plan,           // 'free', 'pro', 'enterprise'
+  role: user.role,           // 'admin', 'member'
+  createdAt: user.createdAt,
+  // Add any other relevant properties
+}
 ```
+
+The more traits you provide, the better Userlens can segment and analyze behavior.
 
 ---
 
@@ -490,9 +788,9 @@ The SDK requires browser APIs. Make sure:
 
 ### Events not appearing in Userlens
 
-1. Check browser DevTools Network tab for `/api/userlens/events` requests
-2. Verify your `USERLENS_WRITE_CODE` environment variable is set
-3. Check server logs for forwarding errors
+1. Check browser DevTools Network tab for requests
+2. Verify your environment variables are set correctly
+3. For proxy setup, check server logs for errors
 
 ---
 
