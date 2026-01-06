@@ -1,41 +1,21 @@
 # Userlens Analytics SDK
 
-## Track Everything. Decide What Matters Later.
+A JavaScript SDK for capturing user interactions in web applications. The SDK automatically collects clicks and page views, which can then be turned into named events in the Userlens platform.
 
-Traditional analytics tools force you to decide upfront what to track. Miss something? Too bad—you'll have to add code, deploy, and wait for new data. The Userlens SDK flips this model on its head.
+## How It Works
 
-### How It Works
-
-**1. Install once, capture everything**
-
-The Userlens SDK automatically captures every user interaction—clicks, page views, form submissions—along with rich context about where and how it happened.
+The SDK captures all user interactions (clicks, page navigation) along with DOM context and browser metadata. This raw interaction data is sent to Userlens, where you can later define which interactions should be treated as meaningful events.
 
 ```tsx
-// This is all the code you need
 <UserlensProvider config={{ userId, WRITE_CODE, userTraits }}>
   <App />
 </UserlensProvider>
 ```
 
-**2. Define events in Userlens—no code required**
-
-Instead of writing `track("Button Clicked")` everywhere, you define events directly in the [Userlens platform](https://app.userlens.io). See a pattern of clicks you care about? Turn it into a named event with a few clicks. No engineering work required.
-
-**3. Get historical data instantly**
-
-Here's the magic: because we capture everything from day one, when you create a new event in Userlens, **we can backfill historical data**. Forgot to track a feature that launched 3 months ago? No problem—create the event now and see all the data from the past.
-
----
-
-## Why Teams Love This Approach
-
-| Traditional Analytics | Userlens |
-|-----------------------|----------|
-| Engineer adds `track()` call | Product manager creates event in UI |
-| Deploy code to production | Instant—no deploy needed |
-| Wait for new data to come in | Historical data backfilled automatically |
-| Forgot to track something? Start from zero | Never lose data—it's already captured |
-| Code changes for every tracking update | One-time SDK setup, events managed in Userlens |
+Once installed, you can:
+- Create named events from captured interactions in the Userlens UI
+- Apply event definitions retroactively to historical data
+- Track additional custom events via `pushEvent()`
 
 ---
 
@@ -43,73 +23,78 @@ Here's the magic: because we capture everything from day one, when you create a 
 
 The SDK automatically collects:
 
-- **Every click** with full DOM context (element, classes, IDs, text, position in page)
-- **Page views** including URL, referrer, and query parameters
-- **User context** like browser, OS, device type, viewport size, timezone
-- **Custom events** you explicitly track via `pushEvent()`
+- **Clicks** — XPath selector, DOM snapshot (element hierarchy, classes, IDs, text content)
+- **Page views** — URL, pathname, referrer, query parameters
+- **Browser context** — Browser name/version, OS, device type, viewport size, timezone
 
-All events are associated with the user identity you provide, enabling powerful user-level and company-level analytics in Userlens.
+You can also manually track custom events:
+
+```tsx
+collector?.pushEvent({
+  event: 'Form Submitted',
+  properties: { formId: 'signup' }
+});
+```
+
+All events are associated with the `userId` you provide.
 
 ---
 
-## Two Setup Options
+## Setup Options
 
-### Option A: Proxy Setup (Recommended)
+### Proxy Setup (Recommended)
 
-Events flow through your backend before reaching Userlens.
+Events are sent to your backend, which forwards them to Userlens.
 
 ```
 Browser → Your Backend → Userlens API
 ```
 
-**Benefits:**
-- Works around ad blockers
-- Your API key stays on the server
-- You control data before it leaves your infrastructure
+- API key stays server-side
+- Not affected by ad blockers
+- Gives you control over the data pipeline
 
-### Option B: Frontend-Only Setup
+### Frontend-Only Setup
 
-Events go directly from the browser to Userlens.
+Events are sent directly from the browser to Userlens.
 
 ```
 Browser → Userlens API
 ```
 
-**Benefits:**
-- Faster to set up (no backend changes)
-- Good for internal tools or prototypes
+- Simpler setup (no backend changes)
+- API key is exposed in browser
+- May be blocked by ad blockers
 
 ---
 
 ## Get Started
 
-Choose your frontend framework:
+**Frontend:**
+- [React Setup](./react.md)
+- [Next.js Setup](./nextjs.md)
 
-- **[React Setup Guide](./react.md)** — For React applications
-- **[Next.js Setup Guide](./nextjs.md)** — For Next.js applications (with SSR considerations)
-
-If using the proxy setup, you'll also need:
-
-- **[Node.js/Express Backend](./proxy-nodejs.md)**
-- **[Python Backend](./proxy-python.md)**
-- **[Ruby on Rails Backend](./proxy-rails.md)**
+**Backend (for proxy setup):**
+- [Node.js / Express](./proxy-nodejs.md)
+- [Python (Flask / Django)](./proxy-python.md)
+- [Ruby on Rails](./proxy-rails.md)
 
 ---
 
-## Quick Reference
+## Additional Resources
 
 | Resource | Description |
 |----------|-------------|
-| [Custom Events](./custom-events.md) | Track specific actions manually |
-| [API Reference](./api-reference.md) | Direct HTTP API documentation |
+| [Custom Events](./custom-events.md) | Manually tracking specific actions |
+| [API Reference](./api-reference.md) | HTTP API documentation |
 | [Troubleshooting](./troubleshooting.md) | Common issues and solutions |
 
 ---
 
 ## Requirements
 
-- **Browser:** Any modern browser (Chrome, Firefox, Safari, Edge)
-- **React:** Version 16.8+ (for hooks support)
-- **Next.js:** Version 12+ recommended
+- **Browser:** Chrome, Firefox, Safari, Edge (modern versions)
+- **React:** 16.8+
+- **Next.js:** 12+
 
-The SDK is ~15KB gzipped and has minimal dependencies.
+Bundle size: ~15KB gzipped.
