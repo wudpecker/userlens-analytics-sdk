@@ -1,42 +1,16 @@
-# 📊 userlens-analytics-sdk
+# Userlens Analytics SDK
 
-Powerful and lightweight event tracking + session replay SDK for web apps. Works standalone or with React. Built for modern frontend teams.
+**Track everything. Decide what matters later.**
 
----
+The Userlens SDK automatically captures every user interaction in your web app. Define events later in the [Userlens platform](https://app.userlens.io)—no code changes required.
 
-## 📚 Table of Contents
-- [📘 Introduction](#-introduction)
-- [📦 Installation](#installation)
-- [⚡ Quickstart](#quickstart)
-- [🧠 SDK Overview](#-sdk-overview)
-- [✍️ EventCollector — Two Modes](#️-eventcollector--two-modes)
-  - [1. Manual Upload Mode (RECOMMENDED)](#1-manual-upload-mode-recommended)
-  - [2. Auto-Upload Mode](#2-auto-upload-mode)
-- [🎥 SessionRecorder](#-sessionrecorder)
-- [⚛️ React Wrapper](#react-wrapper)
-  - [✅ What It Does](#️-what-it-does)
-  - [🛠 Usage Example](#-usage-example)
-  - [🔁 Behavior Details](#-behavior-details)
-- [📌 Tracking Custom Events](#️-tracking-custom-events)
-  - [✍️ Example](#️-example)
-  - [🧠 How it works](#-how-it-works)
-- [🛰 API Documentation](#-api-documentation)
-  - [🔐 Authentication](#-authentication)
-  - [🧭 Endpoint](#-endpoint)
-    - [1. Identify](#1-identify)
-    - [2. Group](#2-group)
-    - [3. Track](#3-track)
-  - [🔄 Sending Raw Events (from EventCollector)](#-sending-raw-events-from-eventcollector)
+## Why Userlens?
 
-  
-## 📘 Introduction
-
-`userlens-analytics-sdk` is a lightweight, framework-agnostic JavaScript SDK for collecting user interaction events and recording session replays directly in the browser.
-
-It supports two main features:
-
-- 🔍 **Event tracking** — Capture clicks and page views, complete with DOM snapshots and context. You can also push your own custom events manually.
-- 🎥 **Session replay** — Record full user sessions.
+| Traditional Analytics | Userlens |
+|-----------------------|----------|
+| Add `track()` calls for each event | Install once, capture everything |
+| Deploy code to track new events | Create events in the UI instantly |
+| Forgot to track something? Start over | Backfill historical data automatically |
 
 ## Installation
 
@@ -44,444 +18,106 @@ It supports two main features:
 npm install userlens-analytics-sdk
 ```
 
-## Quickstart
-
-### 🧠 SDK Overview
-
-There are **two layers** to this SDK:
-
-1. **EventCollector** – Tracks user interactions like clicks and page views.
-2. **SessionRecorder** – Captures full user session replays.
-
-Both can be used:
-
-- With the React provider (recommended for React apps)
-- Manually via class instances (non-React or custom setups)
-
----
-
-### ✍️ EventCollector — Two Modes
-
-There are **two ways to configure** `EventCollector`:
-
-#### 1. Manual Upload Mode (RECOMMENDED)
-
-This is the most flexible and production-safe setup. You **receive events via a callback** and forward them through your own backend to the Userlens API.
-
-```ts
-const collector = new EventCollector({
-  callback: (events) => {
-    // send events to your backend
-    fetch("/api/forward-events", {
-      method: "POST",
-      body: JSON.stringify(events),
-    });
-  },
-  intervalTime: 5000, // optional
-});
-```
-
-If you're using **manual upload mode**, you're responsible for sending the collected events to the Userlens API. Here's how to do that properly in a Node.js/Express setup.
-
-```ts
-// server.js or routes/track.js
-
-import express from "express";
-import fetch from "node-fetch"; // or global fetch in newer Node versions
-
-const router = express.Router();
-
-/**
- * Your WRITE_CODE — retrieve it from:
- * 👉 https://app.userlens.io/settings/userlens-sdk
- */
-const WRITE_CODE = process.env.USERLENS_WRITE_CODE!;
-
-const MAIN_BASE_URL = "https://events.userlens.io";
-const RAW_BASE_URL = "https://raw.userlens.io";
-
-// Step 1: optional user traits sync
-async function identify(userId, traits) {
-  if (!userId || !traits) return;
-
-  const body = {
-    type: "identify",
-    userId,
-    source: "userlens-js-analytics-sdk",
-    traits,
-  };
-
-  const res = await fetch(`${MAIN_BASE_URL}/event`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Basic ${WRITE_CODE}`,
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) throw new Error("Failed to identify user");
-}
-
-// Step 2: send the events array
-async function track(events) {
-  const body = { events };
-
-  const res = await fetch(`${RAW_BASE_URL}/raw/event`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Basic ${WRITE_CODE}`,
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) throw new Error("Failed to track events");
-}
-
-// Your actual POST endpoint
-router.post("/forward-events", async (req, res) => {
-  const events = req.body;
-  if (!Array.isArray(events)) return res.status(400).send("Invalid body");
-
-  try {
-    const first = events[0];
-
-    // Optional: keep traits in sync
-    if (first?.userId && first?.properties) {
-      await identify(first.userId, first.properties);
-    }
-
-    await track(events);
-    res.status(200).send("ok");
-  } catch (err) {
-    console.error("Userlens forwarding error:", err);
-    res.status(500).send("Tracking failed");
-  }
-});
-
-export default router;
-```
-
-<!-- MENTION HERE HOW TO RECEIVE THE EVENTS AND FORWARD THEM TO UL API -->
-
-✅ Pros:
-
-- Works around adblockers
-- You can batch, modify, or encrypt events
-
-#### 2. Auto-Upload Mode
-
-This mode sends events directly to the Userlens API from the frontend.
-
-```ts
-const collector = new EventCollector({
-  userId: "user-123", // ✅ required
-  WRITE_CODE: "your-public-write-code", // ✅ required
-  userTraits: { plan: "starter" }, // ✅ required, pass as many traits as you can so Userlens provides better insights
-  groupId: "group-123", // passed to identify a group (e.g. company that the user belongs to)
-  groupTraits: {
-    domain: "userlens.io",
-    title: "Userlens",
-    industry: "Software"
-  }, // traits that exist on your group object (e.g. company workspace traits)
-  intervalTime: 5000, // optional
-});
-```
-
-✅ Pros:
-
-- Easy to set up
-
-⚠️ Cons:
-
-- May be blocked by adblockers
-- You lose control over event delivery
-
-ℹ️ Use this only if you’re okay with events being sent directly from the browser.
-
----
-
-### 🎥 SessionRecorder
-
-SessionRecorder captures full user sessions. It's enabled by default if WRITE_CODE and userId are passed in config when using the React provider. Alternatively, you can instantiate it manually.
-
-It always requires:
-
-- userId
-- WRITE_CODE
-
-```ts
-const recorder = new SessionRecorder({
-  userId: "user-123",
-  WRITE_CODE: "your-public-write-code",
-  recordingOptions: {
-    maskingOptions: ["passwords"],
-    BUFFER_SIZE: 10,
-    TIMEOUT: 30 * 60 * 1000, // 30 mins
-  },
-});
-```
-
-❗ If either userId or WRITE_CODE is missing, the recorder will not start and will log a warning.
-
-### React Wrapper
-
-The `UserlensProvider` is a React context wrapper that **automatically initializes** both:
-
-<!-- - [`EventCollector`](#eventcollector-methods) — for capturing user events
-- [`SessionRecorder`](#sessionrecorder-methods) — for recording user sessions -->
-
-- `EventCollector` - for capturing user events
-- `SessionRecorder` - for recording user sessions
-
-This is the **recommended way** to integrate `userlens-analytics-sdk` into React projects.
-
----
-
-#### ✅ What It Does
-
-Under the hood, the React wrapper:
-
-- Instantiates `EventCollector` based on the mode (`callback` or `auto-upload`)
-- Optionally starts a `SessionRecorder` if not disabled
-- Manages lifecycle + cleanup for both
-- Exposes both instances via the `useUserlens()` hook
-
----
-
-#### 🛠 Usage Example
+## Quick Start (React)
 
 ```tsx
-import UserlensProvider from "userlens-analytics-sdk/react";
+import UserlensProvider from 'userlens-analytics-sdk/react';
 
-const config = useMemo(
-  () => ({
-    // Required only if you're enabling session recording
-    // or using auto-upload mode for EventCollector
-    WRITE_CODE: "your-public-write-code",
-    // Required only if you're enabling session recording
-    // or using auto-upload mode for EventCollector
-    userId: "user-123",
-    // Used when letting the SDK handle event uploads automatically. Keeps traits up-to-date.
-    userTraits: { email: "jane@example.com" },
-    // Used when letting the SDK handle event uploads automatically. Associates user with a group (e.g. company).
-    groupId: "company-123",
-    // Used when letting the SDK handle event uploads automatically. Keeps group traits up-to-date.
-    groupTraits: {
-      domain: "userlens.io",
-      title: "Userlens",
-      industry: "Software"
-    },
-    eventCollector: {
-      // Required when you want to manually handle event forwarding
-      callback: (events) => {
-        fetch("/api/track", {
-          method: "POST",
-          body: JSON.stringify(events),
-        });
-      },
-    },
-    // Set to false if you don't want to enable session replay
-    enableSessionReplay: true,
-    // Optional — fine-tunes session replay behavior
-    sessionRecorder: {
-      // Masks inputs like <input type="password" />
-      maskingOptions: ["passwords"],
-      // Controls how many events to buffer before flushing to backend
-      // Recommended: 10
-      BUFFER_SIZE: 10,
-    },
-  }),
-  [userId] // 👈 Prevents unnecessary reinitialization
-);
+function App() {
+  const config = useMemo(() => ({
+    userId: currentUser.id,
+    userTraits: { email: currentUser.email, plan: currentUser.plan },
+    WRITE_CODE: 'your-write-code',  // From app.userlens.io/settings
+  }), [currentUser.id]);
 
-return (
-  <UserlensProvider config={config}>
-    <App />
-  </UserlensProvider>
-);
-```
-
-Then, you can access the SDK instances anywhere using the `useUserlens()` hook:
-
-```ts
-import { useUserlens } from "userlens-analytics-sdk/react";
-
-const { collector, sessionRecorder } = useUserlens();
-
-collector?.pushEvent({
-  event: "Clicked CTA",
-  properties: { location: "hero" },
-});
-```
-
-🔁 Heads up: Always wrap your config in useMemo() to avoid re-instantiating the SDK on every render. Even though the provider has guards, you'll avoid subtle bugs and unnecessary warnings.
-
-#### 🔁 Behavior Details
-
-If enableSessionReplay: false is passed, the wrapper skips session recording.
-
-If you call UserlensProvider with the same userId, it won’t reinitialize anything.
-
-If either WRITE_CODE or userId is missing, session replay will not start and a warning will be logged.
-
-### 📌 Tracking Custom Events
-
-In addition to auto-tracked clicks and page views, you can manually push your own custom events using `collector.pushEvent()`.
-
-This is useful for tracking things like:
-
-- Form submissions
-- In-app interactions (e.g. modal opened, tab switched)
-- Feature usage
-
----
-
-#### ✍️ Example
-
-```ts
-import { useUserlens } from "userlens-analytics-sdk";
-
-const { collector } = useUserlens();
-
-collector?.pushEvent({
-  event: "Upgraded Plan",
-  properties: {
-    plan: "pro",
-    source: "pricing_modal",
-  },
-});
-```
-
----
-
-#### 🧠 How it works
-
-The event will be stored as a `PushedEvent` (not a raw click or page view).
-
-The `properties` object is merged with the user's full environment/context automatically (OS, browser, timezone, etc).
-
-#### ⚠️ TypeError: Cannot read properties of undefined
-
-When using `UserlensProvider`, keep this in mind:
-
-**Don’t call `pushEvent()` before the provider is mounted.**  
-The `collector` instance is created inside the provider on mount. If you try to access it too early (e.g. before the first render completes), `useUserlens()` will return `null`, and your call will silently do nothing — or worse, throw an error if you don’t check.
-
-✅ Always check that `collector` exists before using it:
-
-```ts
-if (collector) {
-  collector.pushEvent({ event: "Something" });
+  return (
+    <UserlensProvider config={config}>
+      <YourApp />
+    </UserlensProvider>
+  );
 }
 ```
 
-### 🛰 API Documentation
+That's it. Every click and page view is now captured.
 
-As an alternative to using `userlens-analytics-sdk`, you can implement event tracking manually via our HTTP API.
+## Documentation
 
----
+| Guide | Description |
+|-------|-------------|
+| [Introduction](./docs/introduction.md) | Overview and how it works |
+| [React Setup](./docs/react.md) | Complete React integration guide |
+| [Next.js Setup](./docs/nextjs.md) | Next.js with SSR considerations |
+| [Custom Events](./docs/custom-events.md) | Track specific actions manually |
+| [API Reference](./docs/api-reference.md) | HTTP API documentation |
+| [Troubleshooting](./docs/troubleshooting.md) | Common issues and solutions |
 
-#### 🔐 Authentication
+### Backend Proxy Guides
 
-All requests must include a **write code** in the `Authorization` header.
+For production apps, we recommend the proxy setup (keeps your API key secure, avoids ad blockers):
 
-You can retrieve your write code at:  
-👉 [https://app.userlens.io/settings/userlens-sdk](https://app.userlens.io/settings/userlens-sdk)
+| Backend | Guide |
+|---------|-------|
+| Node.js/Express | [Setup Guide](./docs/proxy-nodejs.md) |
+| Python (Flask/Django) | [Setup Guide](./docs/proxy-python.md) |
+| Ruby on Rails | [Setup Guide](./docs/proxy-rails.md) |
 
----
+## Two Setup Options
 
-#### 🧭 Endpoint
+### Option A: Proxy Setup (Recommended)
 
-All standard requests go to:
+Events flow through your backend → Userlens API
 
-```
-POST https://events.userlens.io/event
-```
-
-You can send three types of calls:
-
----
-
-##### 1. Identify
-
-Keeps user traits up to date.
-
-```ts
-const body = {
-  type: "identify",
-  userId, // string
-  source: "userlens-restapi",
-  traits, // object with user info (e.g. email, name, etc.)
-};
-```
-
-> `traits` is a free-form object — add any relevant user properties.
-
----
-
-##### 2. Group
-
-Updates company or organization traits.
-
-```ts
-const body = {
-  type: "group",
-  groupId, // string
-  userId,  // string (required for association)
-  source: "userlens-restapi",
-  traits, // object with company info
-};
-```
-
----
-
-##### 3. Track
-
-Sends a single custom event.
-
-```ts
-const body = {
-  type: "track",
-  userId, // string
-  source: "userlens-restapi",
-  event: "button-clicked", // event name
-  properties: {
-    color: "red", // optional metadata
+```tsx
+<UserlensProvider config={{
+  userId: user.id,
+  userTraits: { email: user.email },
+  eventCollector: {
+    callback: (events) => {
+      fetch('/api/userlens/events', {
+        method: 'POST',
+        body: JSON.stringify(events),
+      });
+    },
   },
-};
+}}>
 ```
 
----
+### Option B: Frontend-Only Setup
 
-#### 🔄 Sending Raw Events (from EventCollector)
+Events go directly to Userlens API
 
-If you're forwarding events collected by `EventCollector`, send them to:
-
-```
-POST https://raw.userlens.io/raw/event
-```
-
-Payload format:
-
-```ts
-const body = {
-  events: [
-    {
-      event: "input-change",
-      is_raw: true,
-      snapshot: [], // DOM snapshot (optional)
-      properties: {}, // metadata
-    },
-    {
-      event: "form-submitted",
-      is_raw: false, // explicitly pushed via pushEvent()
-      properties: {},
-    },
-  ],
-};
+```tsx
+<UserlensProvider config={{
+  WRITE_CODE: 'your-write-code',
+  userId: user.id,
+  userTraits: { email: user.email },
+}}>
 ```
 
-✅ Use this for sending batched autocollected + custom events.
+## Track Custom Events
 
+```tsx
+import { useUserlens } from 'userlens-analytics-sdk/react';
+
+function UpgradeButton() {
+  const { collector } = useUserlens();
+
+  const handleUpgrade = () => {
+    collector?.pushEvent({
+      event: 'Plan Upgraded',
+      properties: { plan: 'pro' },
+    });
+  };
+
+  return <button onClick={handleUpgrade}>Upgrade</button>;
+}
+```
+
+## Requirements
+
+- **React:** 16.8+ (hooks support)
+- **Browser:** Chrome, Firefox, Safari, Edge (modern versions)
+
+## License
+
+ISC
