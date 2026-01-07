@@ -10,6 +10,7 @@
 * [Next.js](nextjs.md)
   * [Client-Side Setup](nextjs/client-side.md)
   * [Proxy Setup](nextjs/proxy.md)
+* [HTTP API](http-api.md)
 
 ## Guides
 

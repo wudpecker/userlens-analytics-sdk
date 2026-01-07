@@ -16,10 +16,14 @@ npm install userlens-analytics-sdk
 | **Backend changes** | None | Uses Next.js API routes |
 | **Setup time** | ~5 minutes | ~15 minutes |
 
-### [Client-Side Setup](./nextjs/client-side.md)
+{% content-ref url="nextjs/client-side.md" %}
+[client-side.md](nextjs/client-side.md)
+{% endcontent-ref %}
 
 Events go directly from the browser to Userlens. Quick to set up, no API routes needed.
 
-### [Proxy Setup](./nextjs/proxy.md)
+{% content-ref url="nextjs/proxy.md" %}
+[proxy.md](nextjs/proxy.md)
+{% endcontent-ref %}
 
 Events flow through your Next.js API route first. Use this if you need to avoid ad blockers.

@@ -4,11 +4,33 @@ This document covers the Userlens HTTP API for direct integration or server-side
 
 ## Authentication
 
-All API requests require your **Write Code** in the Authorization header:
+All API requests require your **Write Code** in the Authorization header using HTTP Basic Auth.
 
+The token must be base64 encoded in the format `write_code:` (with trailing colon, empty password):
+
+{% tabs %}
+{% tab title="Node.js" %}
+```javascript
+const authToken = Buffer.from(`${WRITE_CODE}:`).toString('base64');
+// Header: Authorization: Basic <authToken>
 ```
-Authorization: Basic YOUR_WRITE_CODE
+{% endtab %}
+
+{% tab title="Python" %}
+```python
+import base64
+auth_token = base64.b64encode(f'{WRITE_CODE}:'.encode()).decode()
+# Header: Authorization: Basic <auth_token>
 ```
+{% endtab %}
+
+{% tab title="Ruby" %}
+```ruby
+auth_token = Base64.strict_encode64("#{write_code}:")
+# Header: Authorization: Basic <auth_token>
+```
+{% endtab %}
+{% endtabs %}
 
 Get your Write Code from [Userlens Settings](https://app.userlens.io/settings/userlens-sdk).
 
@@ -61,11 +83,13 @@ POST https://events.userlens.io/event
 **Example (Node.js):**
 
 ```javascript
+const authToken = Buffer.from(`${WRITE_CODE}:`).toString('base64');
+
 await fetch('https://events.userlens.io/event', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'Authorization': `Basic ${WRITE_CODE}`,
+    'Authorization': `Basic ${authToken}`,
   },
   body: JSON.stringify({
     type: 'identify',

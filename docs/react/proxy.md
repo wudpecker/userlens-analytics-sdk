@@ -115,6 +115,9 @@ const router = express.Router();
 const WRITE_CODE = process.env.USERLENS_WRITE_CODE;
 const RAW_URL = 'https://raw.userlens.io/raw/event';
 
+// Create Basic auth token: base64 encode "write_code:"
+const authToken = Buffer.from(`${WRITE_CODE}:`).toString('base64');
+
 router.post('/events', async (req, res) => {
   try {
     const events = req.body;
@@ -127,7 +130,7 @@ router.post('/events', async (req, res) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${WRITE_CODE}`,
+        'Authorization': `Basic ${authToken}`,
       },
       body: JSON.stringify({ events }),
     });
@@ -160,6 +163,7 @@ app.use('/api/userlens', userlensRoutes);
 ```python
 # routes/userlens.py
 import os
+import base64
 import requests
 from flask import Blueprint, request, jsonify
 
@@ -167,6 +171,9 @@ userlens_bp = Blueprint('userlens', __name__, url_prefix='/api/userlens')
 
 WRITE_CODE = os.environ.get('USERLENS_WRITE_CODE')
 RAW_URL = 'https://raw.userlens.io/raw/event'
+
+# Create Basic auth token: base64 encode "write_code:"
+auth_token = base64.b64encode(f'{WRITE_CODE}:'.encode()).decode()
 
 @userlens_bp.route('/events', methods=['POST'])
 def forward_events():
@@ -181,7 +188,7 @@ def forward_events():
             json={'events': events},
             headers={
                 'Content-Type': 'application/json',
-                'Authorization': f'Basic {WRITE_CODE}',
+                'Authorization': f'Basic {auth_token}',
             }
         )
 
@@ -200,6 +207,7 @@ def forward_events():
 ```python
 # views/userlens.py
 import json
+import base64
 import requests
 from django.conf import settings
 from django.http import JsonResponse
@@ -207,6 +215,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 RAW_URL = 'https://raw.userlens.io/raw/event'
+
+# Create Basic auth token: base64 encode "write_code:"
+auth_token = base64.b64encode(f'{settings.USERLENS_WRITE_CODE}:'.encode()).decode()
 
 @csrf_exempt
 @require_POST
@@ -222,7 +233,7 @@ def forward_events(request):
             json={'events': events},
             headers={
                 'Content-Type': 'application/json',
-                'Authorization': f'Basic {settings.USERLENS_WRITE_CODE}',
+                'Authorization': f'Basic {auth_token}',
             }
         )
 
@@ -245,6 +256,8 @@ path('api/userlens/events', forward_events),
 {% tab title="Ruby on Rails" %}
 ```ruby
 # app/controllers/api/userlens_controller.rb
+require 'base64'
+
 module Api
   class UserlensController < ApplicationController
     skip_before_action :verify_authenticity_token
@@ -261,9 +274,12 @@ module Api
       write_code = Rails.application.credentials.dig(:userlens, :write_code) ||
                    ENV['USERLENS_WRITE_CODE']
 
+      # Create Basic auth token: base64 encode "write_code:"
+      auth_token = Base64.strict_encode64("#{write_code}:")
+
       response = HTTP.headers(
         'Content-Type' => 'application/json',
-        'Authorization' => "Basic #{write_code}"
+        'Authorization' => "Basic #{auth_token}"
       ).post(RAW_URL, json: { events: events_data })
 
       if response.status.success?

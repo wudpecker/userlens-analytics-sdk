@@ -16,10 +16,14 @@ npm install userlens-analytics-sdk
 | **Backend changes** | None | Required |
 | **Setup time** | ~5 minutes | ~15 minutes |
 
-### [Client-Side Setup](./react/client-side.md)
+{% content-ref url="react/client-side.md" %}
+[client-side.md](react/client-side.md)
+{% endcontent-ref %}
 
 Events go directly from the browser to Userlens. Quick to set up, no backend changes needed.
 
-### [Proxy Setup](./react/proxy.md)
+{% content-ref url="react/proxy.md" %}
+[proxy.md](react/proxy.md)
+{% endcontent-ref %}
 
 Events flow through your backend first. Use this if you need to avoid ad blockers.

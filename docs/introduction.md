@@ -80,18 +80,29 @@ Browser → Your Backend → Userlens API
 - Not affected by ad blockers
 - Gives you control over the data pipeline
 
+### HTTP API (Direct Integration)
+
+Make HTTP requests directly to the Userlens API without using the SDK.
+
+```
+Your App → Userlens API
+```
+
+- Use from any environment (backend, other frontend frameworks, mobile)
+- Works with any language (Go, PHP, Ruby, Python, Vue, Angular, etc.)
+- Full control over when and how events are sent
+
 ---
 
 ## Get Started
 
-**Frontend:**
-- [React Setup](./react.md)
-- [Next.js Setup](./nextjs.md)
+Choose your integration method:
 
-**Backend (for proxy setup):**
-- [Node.js / Express](./proxy-nodejs.md)
-- [Python (Flask / Django)](./proxy-python.md)
-- [Ruby on Rails](./proxy-rails.md)
+| Method | Best For |
+|--------|----------|
+| [React](./react.md) | React applications |
+| [Next.js](./nextjs.md) | Next.js applications |
+| [HTTP API](./http-api.md) | Other frameworks, backends, mobile apps |
 
 ---
 

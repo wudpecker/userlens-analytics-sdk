@@ -247,6 +247,9 @@ import { NextRequest, NextResponse } from 'next/server';
 const WRITE_CODE = process.env.USERLENS_WRITE_CODE!;
 const RAW_BASE_URL = 'https://raw.userlens.io';
 
+// Create Basic auth token: base64 encode "write_code:"
+const authToken = Buffer.from(`${WRITE_CODE}:`).toString('base64');
+
 export async function POST(request: NextRequest) {
   try {
     const events = await request.json();
@@ -262,7 +265,7 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${WRITE_CODE}`,
+        'Authorization': `Basic ${authToken}`,
       },
       body: JSON.stringify({ events }),
     });
@@ -291,6 +294,9 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 const WRITE_CODE = process.env.USERLENS_WRITE_CODE!;
 const RAW_BASE_URL = 'https://raw.userlens.io';
 
+// Create Basic auth token: base64 encode "write_code:"
+const authToken = Buffer.from(`${WRITE_CODE}:`).toString('base64');
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -310,7 +316,7 @@ export default async function handler(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${WRITE_CODE}`,
+        'Authorization': `Basic ${authToken}`,
       },
       body: JSON.stringify({ events }),
     });
