@@ -17,8 +17,8 @@ For these, use `pushEvent()`.
 
 ## Basic Usage
 
-### React
-
+{% tabs %}
+{% tab title="React" %}
 ```tsx
 import { useUserlens } from 'userlens-analytics-sdk/react';
 
@@ -43,9 +43,9 @@ function CheckoutButton() {
   return <button onClick={handleCheckout}>Complete Purchase</button>;
 }
 ```
+{% endtab %}
 
-### Vanilla JavaScript
-
+{% tab title="Vanilla JavaScript" %}
 ```javascript
 import { EventCollector } from 'userlens-analytics-sdk';
 
@@ -64,6 +64,8 @@ collector.pushEvent({
   },
 });
 ```
+{% endtab %}
+{% endtabs %}
 
 ---
 
@@ -254,8 +256,9 @@ collector.pushEvent({ event: 'Something Happened' });
 
 Enable debug mode to see events in the console:
 
+{% tabs %}
+{% tab title="React" %}
 ```tsx
-// React
 <UserlensProvider config={{
   // ...
   eventCollector: {
@@ -263,13 +266,18 @@ Enable debug mode to see events in the console:
     debug: true,  // Enable debug logging
   },
 }}>
+```
+{% endtab %}
 
-// Vanilla JS
+{% tab title="Vanilla JavaScript" %}
+```javascript
 const collector = new EventCollector({
   callback: (events) => { /* ... */ },
   debug: true,
 });
 ```
+{% endtab %}
+{% endtabs %}
 
 ---
 
