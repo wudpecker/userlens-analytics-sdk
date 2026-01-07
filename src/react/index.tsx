@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useRef } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 
 import EventCollector from "../EventCollector";
 import { UserlensProviderConfig, EventCollectorConfig } from "../types";
@@ -21,7 +21,6 @@ const UserlensProvider: React.FC<{
 
   const collectorRef = useRef<EventCollector | null>(null);
 
-  const lastUserIdRefEc = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (typeof window === "undefined") {
       console.error(
@@ -35,15 +34,10 @@ const UserlensProvider: React.FC<{
       return;
     }
 
-    if (lastUserIdRefEc?.current === config?.userId) {
-      return;
-    }
-    lastUserIdRefEc.current = config?.userId;
-
-    // prevent double instantiation
+    // Cleanup previous collector if userId changed
     if (collectorRef.current) {
-      console.warn("UserlensProvider: EventCollector already initialized.");
-      return;
+      collectorRef.current.stop();
+      collectorRef.current = null;
     }
 
     let ecConfig: EventCollectorConfig;
@@ -70,6 +64,12 @@ const UserlensProvider: React.FC<{
     const collector = new EventCollector(ecConfig);
     collectorRef.current = collector;
     setEventCollector(collector);
+
+    // Cleanup on unmount or before re-running effect
+    return () => {
+      collectorRef.current?.stop();
+      collectorRef.current = null;
+    };
   }, [config?.userId]);
 
   useEffect(() => {
