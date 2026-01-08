@@ -14,6 +14,7 @@ import {
   PushedEvent,
   UserContext,
   PageMetadata,
+  NetworkEvent,
 } from "../types";
 import { getUserlensVersion, saveWriteCode, getIsLocalhost } from "../utils";
 
@@ -25,10 +26,10 @@ export default class EventCollector {
   private autoUploadModeEnabled!: Boolean;
   private useLighterSnapshot: boolean = false;
   private callback?: (
-    events: (PageViewEvent | RawEvent | PushedEvent)[]
+    events: (PageViewEvent | RawEvent | PushedEvent | NetworkEvent)[]
   ) => void;
   private intervalTime!: number;
-  private events!: (PageViewEvent | RawEvent | PushedEvent)[];
+  private events!: (PageViewEvent | RawEvent | PushedEvent | NetworkEvent)[];
   private userContext: UserContext | null = null;
   private debug!: boolean;
   private networkTracker?: NetworkTracker;
@@ -64,7 +65,7 @@ export default class EventCollector {
       skipRawEvents = false,
       useLighterSnapshot = false,
       debug = false,
-      trackNetworkCalls = false,
+      trackNetworkCalls = true,
       networkCaptureBody = false,
       networkMaxBodySize,
       networkIgnoreUrls,
@@ -141,6 +142,9 @@ export default class EventCollector {
 
       this.networkTracker = new NetworkTracker({
         onEvent: (event) => {
+          if (this.userId) {
+            event.userId = this.userId;
+          }
           this.events.push(event);
         },
         captureBody: networkCaptureBody,

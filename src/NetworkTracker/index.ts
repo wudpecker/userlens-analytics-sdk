@@ -238,7 +238,6 @@ export default class NetworkTracker {
   }): NetworkEvent {
     return {
       event: "$ul_network_request",
-      is_raw: false,
       properties: {
         $ul_url: url,
         $ul_method: method.toUpperCase(),

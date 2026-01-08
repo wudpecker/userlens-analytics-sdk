@@ -6,7 +6,7 @@ export const USERLENS_API_DOMAINS = [
   "raw.userlens.io",
 ];
 
-import { PushedEvent, PageViewEvent, RawEvent } from "../types";
+import { PushedEvent, PageViewEvent, RawEvent, NetworkEvent } from "../types";
 
 const getWriteCode = (): string | null => {
   try {
@@ -111,7 +111,7 @@ export const group = async (
 };
 
 export const track = async (
-  events: (PushedEvent | PageViewEvent | RawEvent)[],
+  events: (PushedEvent | PageViewEvent | RawEvent | NetworkEvent)[],
   debug: boolean = false
 ) => {
   const writeCode = getWriteCode();

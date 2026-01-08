@@ -17,7 +17,9 @@ export type AutoUploadConfig = {
 };
 
 export type CallbackModeConfig = {
-  callback: (events: (PushedEvent | PageViewEvent | RawEvent)[]) => void;
+  callback: (
+    events: (PushedEvent | PageViewEvent | RawEvent | NetworkEvent)[]
+  ) => void;
   userId?: undefined;
   WRITE_CODE?: undefined;
   intervalTime?: number;
@@ -122,8 +124,8 @@ export interface NetworkEventMetadata {
 }
 
 export interface NetworkEvent {
+  userId?: string;
   event: "$ul_network_request";
-  is_raw: false;
   properties: NetworkEventMetadata;
 }
 
