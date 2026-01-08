@@ -53,6 +53,10 @@ const UserlensProvider: React.FC<{
         intervalTime: config?.eventCollector?.intervalTime,
         skipRawEvents: config?.eventCollector?.skipRawEvents,
         useLighterSnapshot: config?.eventCollector?.useLighterSnapshot,
+        trackNetworkCalls: config?.eventCollector?.trackNetworkCalls,
+        networkCaptureBody: config?.eventCollector?.networkCaptureBody,
+        networkMaxBodySize: config?.eventCollector?.networkMaxBodySize,
+        networkIgnoreUrls: config?.eventCollector?.networkIgnoreUrls,
       };
     } else {
       ecConfig = {
@@ -64,6 +68,10 @@ const UserlensProvider: React.FC<{
         intervalTime: config?.eventCollector?.intervalTime,
         skipRawEvents: config?.eventCollector?.skipRawEvents,
         useLighterSnapshot: config?.eventCollector?.useLighterSnapshot,
+        trackNetworkCalls: config?.eventCollector?.trackNetworkCalls,
+        networkCaptureBody: config?.eventCollector?.networkCaptureBody,
+        networkMaxBodySize: config?.eventCollector?.networkMaxBodySize,
+        networkIgnoreUrls: config?.eventCollector?.networkIgnoreUrls,
       };
     }
 

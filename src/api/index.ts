@@ -1,6 +1,11 @@
 const MAIN_BASE_URL = "https://events.userlens.io";
 const RAW_BASE_URL = "https://raw.userlens.io";
 
+export const USERLENS_API_DOMAINS = [
+  "events.userlens.io",
+  "raw.userlens.io",
+];
+
 import { PushedEvent, PageViewEvent, RawEvent } from "../types";
 
 const getWriteCode = (): string | null => {

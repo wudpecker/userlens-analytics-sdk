@@ -1,7 +1,8 @@
 import Bowser from "bowser";
 import DOMPath from "chrome-dompath";
 
-import { identify, track, group } from "../api";
+import { identify, track, group, USERLENS_API_DOMAINS } from "../api";
+import NetworkTracker from "../NetworkTracker";
 
 import {
   EventCollectorConfig,
@@ -30,6 +31,7 @@ export default class EventCollector {
   private events!: (PageViewEvent | RawEvent | PushedEvent)[];
   private userContext: UserContext | null = null;
   private debug!: boolean;
+  private networkTracker?: NetworkTracker;
   #senderIntervalId: ReturnType<typeof setInterval> | undefined;
 
   #originalPushState!: (
@@ -62,6 +64,10 @@ export default class EventCollector {
       skipRawEvents = false,
       useLighterSnapshot = false,
       debug = false,
+      trackNetworkCalls = false,
+      networkCaptureBody = false,
+      networkMaxBodySize,
+      networkIgnoreUrls,
     } = config;
     const userTraits = (config as AutoUploadConfig).userTraits;
 
@@ -123,6 +129,32 @@ export default class EventCollector {
       this.#setupSPAListener();
     }
 
+    if (trackNetworkCalls) {
+      // In auto-upload mode, always exclude Userlens API endpoints to prevent infinite loops
+      const ignoreUrls = [...(networkIgnoreUrls || [])];
+      if (this.autoUploadModeEnabled) {
+        const userlensApiPatterns = USERLENS_API_DOMAINS.map(
+          (domain) => new RegExp(`^https?://${domain.replace(/\./g, "\\.")}`)
+        );
+        ignoreUrls.push(...userlensApiPatterns);
+      }
+
+      this.networkTracker = new NetworkTracker({
+        onEvent: (event) => {
+          this.events.push(event);
+        },
+        captureBody: networkCaptureBody,
+        debug: this.debug,
+        maxBodySize: networkMaxBodySize,
+        ignoreUrls,
+      });
+      this.networkTracker.start();
+
+      if (this.debug) {
+        console.log("Userlens EventCollector: network tracking enabled");
+      }
+    }
+
     this.#initializeSender();
 
     this.userContext = this.getUserContext();
@@ -166,6 +198,10 @@ export default class EventCollector {
     this.#destroyCollector();
     this.#destroySender();
     this.#destroySPAListener();
+
+    if (this.networkTracker) {
+      this.networkTracker.stop();
+    }
   }
 
   private getUserContext(): UserContext {

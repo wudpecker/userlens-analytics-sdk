@@ -10,6 +10,10 @@ export type AutoUploadConfig = {
   intervalTime?: number;
   useLighterSnapshot?: boolean;
   debug?: boolean;
+  trackNetworkCalls?: boolean;
+  networkCaptureBody?: boolean;
+  networkMaxBodySize?: number;
+  networkIgnoreUrls?: RegExp[];
 };
 
 export type CallbackModeConfig = {
@@ -20,6 +24,10 @@ export type CallbackModeConfig = {
   skipRawEvents?: boolean;
   useLighterSnapshot?: boolean;
   debug?: boolean;
+  trackNetworkCalls?: boolean;
+  networkCaptureBody?: boolean;
+  networkMaxBodySize?: number;
+  networkIgnoreUrls?: RegExp[];
 };
 
 export type EventCollectorConfig = AutoUploadConfig | CallbackModeConfig;
@@ -99,4 +107,30 @@ export type UserlensProviderConfig = {
   groupTraits?: Record<string, any>;
   groupId?: string;
   eventCollector?: EventCollectorConfig;
+};
+
+// NetworkTracker
+export interface NetworkEventMetadata {
+  $ul_url: string;
+  $ul_method: string;
+  $ul_params: Record<string, string>;
+  $ul_status: number;
+  $ul_duration: number;
+  $ul_success: boolean;
+  $ul_request_body?: any;
+  $ul_response_body?: any;
+}
+
+export interface NetworkEvent {
+  event: "$ul_network_request";
+  is_raw: false;
+  properties: NetworkEventMetadata;
+}
+
+export type NetworkTrackerConfig = {
+  onEvent: (event: NetworkEvent) => void;
+  captureBody?: boolean;
+  debug?: boolean;
+  maxBodySize?: number;
+  ignoreUrls?: RegExp[];
 };
