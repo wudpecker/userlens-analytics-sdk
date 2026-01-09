@@ -14,6 +14,7 @@
 
 ## Guides
 
+* [Session Recording](session-recording.md)
 * [Custom Events](custom-events.md)
 * [API Reference](api-reference.md)
 * [Troubleshooting](troubleshooting.md)

@@ -110,6 +110,7 @@ Choose your integration method:
 
 | Resource | Description |
 |----------|-------------|
+| [Session Recording](./session-recording.md) | Record and replay user sessions |
 | [Custom Events](./custom-events.md) | Manually tracking specific actions |
 | [API Reference](./api-reference.md) | HTTP API documentation |
 | [Troubleshooting](./troubleshooting.md) | Common issues and solutions |
