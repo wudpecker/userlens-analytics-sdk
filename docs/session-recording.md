@@ -60,9 +60,6 @@ const recorder = new SessionRecorder({
   WRITE_CODE: "your-write-code",
   userId: "user-123",
 });
-
-// Later, when the user logs out or navigates away from authenticated layout
-recorder.stop();
 ```
 
 {% endtab %}
@@ -78,9 +75,6 @@ recorder.stop();
     WRITE_CODE: "your-write-code",
     userId: "user-123",
   });
-
-  // Later, when the user logs out or navigates away from authenticated layout
-  recorder.stop();
 </script>
 ```
 
