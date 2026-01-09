@@ -66,6 +66,25 @@ recorder.stop();
 ```
 
 {% endtab %}
+
+{% tab title="UMD (Script Tag)" %}
+
+```html
+<script src="https://unpkg.com/userlens-session-recorder@1.0.4/dist/userlens-session-recorder.umd.js"></script>
+<script>
+  var SessionRecorder = UserlensSessionRecorder.default;
+
+  var recorder = new SessionRecorder({
+    WRITE_CODE: "your-write-code",
+    userId: "user-123",
+  });
+
+  // Later, when the user logs out or navigates away from authenticated layout
+  recorder.stop();
+</script>
+```
+
+{% endtab %}
 {% endtabs %}
 
 ---
