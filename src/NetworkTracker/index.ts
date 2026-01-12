@@ -8,6 +8,7 @@ export default class NetworkTracker {
   private isActive: boolean = false;
   private maxBodySize: number;
   private ignoreUrls: RegExp[];
+  private allowUrls: RegExp[];
 
   constructor(config: NetworkTrackerConfig) {
     this.onEvent = config.onEvent;
@@ -15,6 +16,7 @@ export default class NetworkTracker {
     this.debug = config.debug ?? false;
     this.maxBodySize = config.maxBodySize ?? 10000; // 10KB default limit
     this.ignoreUrls = config.ignoreUrls ?? [];
+    this.allowUrls = config.allowUrls ?? [];
     this.originalFetch = window.fetch.bind(window);
   }
 
@@ -61,7 +63,12 @@ export default class NetworkTracker {
 
       const { url, method } = self.#extractUrlAndMethod(input, init);
 
-      // Skip tracking for ignored URLs (prevents infinite loops)
+      // First: Check whitelist (if configured, URL must match)
+      if (!self.#shouldAllowUrl(url)) {
+        return self.originalFetch(input, init);
+      }
+
+      // Second: Check blocklist (prevents infinite loops)
       if (self.#shouldIgnoreUrl(url)) {
         return self.originalFetch(input, init);
       }
@@ -135,6 +142,20 @@ export default class NetworkTracker {
 
   #shouldIgnoreUrl(url: string): boolean {
     for (const pattern of this.ignoreUrls) {
+      if (pattern.test(url)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  #shouldAllowUrl(url: string): boolean {
+    // If no whitelist configured, allow all URLs
+    if (this.allowUrls.length === 0) {
+      return true;
+    }
+    // If whitelist configured, URL must match at least one pattern
+    for (const pattern of this.allowUrls) {
       if (pattern.test(url)) {
         return true;
       }

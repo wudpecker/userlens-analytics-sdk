@@ -51,6 +51,7 @@ const UserlensProvider: React.FC<{
         networkCaptureBody: config?.eventCollector?.networkCaptureBody,
         networkMaxBodySize: config?.eventCollector?.networkMaxBodySize,
         networkIgnoreUrls: config?.eventCollector?.networkIgnoreUrls,
+        networkAllowUrls: config?.eventCollector?.networkAllowUrls,
       };
     } else {
       ecConfig = {
@@ -66,6 +67,7 @@ const UserlensProvider: React.FC<{
         networkCaptureBody: config?.eventCollector?.networkCaptureBody,
         networkMaxBodySize: config?.eventCollector?.networkMaxBodySize,
         networkIgnoreUrls: config?.eventCollector?.networkIgnoreUrls,
+        networkAllowUrls: config?.eventCollector?.networkAllowUrls,
       };
     }
 

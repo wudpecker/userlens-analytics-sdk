@@ -69,6 +69,7 @@ export default class EventCollector {
       networkCaptureBody = false,
       networkMaxBodySize,
       networkIgnoreUrls,
+      networkAllowUrls,
     } = config;
     const userTraits = (config as AutoUploadConfig).userTraits;
 
@@ -151,6 +152,7 @@ export default class EventCollector {
         debug: this.debug,
         maxBodySize: networkMaxBodySize,
         ignoreUrls,
+        allowUrls: networkAllowUrls,
       });
       this.networkTracker.start();
 

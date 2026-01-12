@@ -14,6 +14,7 @@ export type AutoUploadConfig = {
   networkCaptureBody?: boolean;
   networkMaxBodySize?: number;
   networkIgnoreUrls?: RegExp[];
+  networkAllowUrls?: RegExp[];
 };
 
 export type CallbackModeConfig = {
@@ -30,6 +31,7 @@ export type CallbackModeConfig = {
   networkCaptureBody?: boolean;
   networkMaxBodySize?: number;
   networkIgnoreUrls?: RegExp[];
+  networkAllowUrls?: RegExp[];
 };
 
 export type EventCollectorConfig = AutoUploadConfig | CallbackModeConfig;
@@ -135,4 +137,5 @@ export type NetworkTrackerConfig = {
   debug?: boolean;
   maxBodySize?: number;
   ignoreUrls?: RegExp[];
+  allowUrls?: RegExp[];
 };

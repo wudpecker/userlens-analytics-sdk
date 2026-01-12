@@ -13,3 +13,4 @@ dist/
 *.tsbuildinfo
 
 userlens-analytics-sdk-*.tgz
+tmpclaude-*
