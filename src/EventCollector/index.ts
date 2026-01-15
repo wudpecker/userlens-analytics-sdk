@@ -16,7 +16,7 @@ import {
   PageMetadata,
   NetworkEvent,
 } from "../types";
-import { getUserlensVersion, saveWriteCode, getIsLocalhost } from "../utils";
+import { getUserlensVersion, saveWriteCode, getIsLocalhost, generateUuid, generateTimestamp } from "../utils";
 
 export default class EventCollector {
   private userId?: string;
@@ -168,6 +168,8 @@ export default class EventCollector {
 
   public pushEvent(event: { event: string; properties?: Record<string, any> }) {
     const eventToPush: PushedEvent = {
+      id: generateUuid(),
+      timestamp: generateTimestamp(),
       is_raw: false,
       ...event,
       properties: {
@@ -301,6 +303,8 @@ export default class EventCollector {
       const snapshotArray = snapshot ? [snapshot] : [];
 
       const rawEvent: RawEvent = {
+        id: generateUuid(),
+        timestamp: generateTimestamp(),
         event: selector,
         is_raw: true,
         snapshot: snapshotArray,
@@ -522,6 +526,8 @@ export default class EventCollector {
 
     const pageMetadata = this.getPageMetadata();
     const pageViewEvent: PageViewEvent = {
+      id: generateUuid(),
+      timestamp: generateTimestamp(),
       event: "$ul_pageview",
       properties: pageMetadata,
     };

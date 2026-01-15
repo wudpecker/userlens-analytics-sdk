@@ -83,6 +83,8 @@ export type SnapshotOptions = {
 };
 
 export interface RawEvent {
+  id: string;
+  timestamp: string;
   userId?: string;
   event: string;
   is_raw: true;
@@ -91,6 +93,8 @@ export interface RawEvent {
 }
 
 export interface PushedEvent {
+  id: string;
+  timestamp: string;
   userId?: string;
   event: string;
   is_raw: false;
@@ -98,6 +102,8 @@ export interface PushedEvent {
 }
 
 export interface PageViewEvent {
+  id: string;
+  timestamp: string;
   userId?: string;
   event: string;
   properties: PageMetadata;
@@ -126,6 +132,8 @@ export interface NetworkEventMetadata {
 }
 
 export interface NetworkEvent {
+  id: string;
+  timestamp: string;
   userId?: string;
   event: "$ul_network_request";
   properties: NetworkEventMetadata;

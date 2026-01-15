@@ -1,4 +1,5 @@
 import { NetworkTrackerConfig, NetworkEvent } from "../types";
+import { generateUuid, generateTimestamp } from "../utils";
 
 export default class NetworkTracker {
   private onEvent: (event: NetworkEvent) => void;
@@ -258,6 +259,8 @@ export default class NetworkTracker {
     responseBody?: any;
   }): NetworkEvent {
     return {
+      id: generateUuid(),
+      timestamp: generateTimestamp(),
       event: "$ul_network_request",
       properties: {
         $ul_url: url,

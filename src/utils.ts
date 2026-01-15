@@ -27,3 +27,7 @@ export function getIsLocalhost(): boolean {
     hostname.endsWith(".localhost")
   );
 }
+
+export function generateTimestamp(): string {
+  return new Date().toISOString();
+}
