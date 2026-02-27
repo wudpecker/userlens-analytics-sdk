@@ -23,7 +23,7 @@ export default class EventCollector {
   private userTraits?: Record<string, any>;
   private groupId?: string;
   private groupTraits?: Record<string, any>;
-  private autoUploadModeEnabled!: Boolean;
+  private autoUploadModeEnabled!: boolean;
   private useLighterSnapshot: boolean = false;
   private callback?: (
     events: (PageViewEvent | RawEvent | PushedEvent | NetworkEvent)[]
