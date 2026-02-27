@@ -28,9 +28,9 @@ jobs:
       - name: Create Release PR or Publish
         uses: changesets/action@v1
         with:
-          publish: npm publish --access public --provenance
-          title: "chore: version packages"
-          commit: "chore: version packages"
+          publish: npx changeset publish --access public --provenance
+          title: "chore: release userlens-analytics-sdk"
+          commit: "chore: release userlens-analytics-sdk"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
