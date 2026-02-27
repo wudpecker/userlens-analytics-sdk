@@ -10,6 +10,10 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -22,7 +26,6 @@ jobs:
       - run: npm run build
 
       - name: Create Release PR or Publish
-        id: changesets
         uses: changesets/action@v1
         with:
           publish: npx changeset publish
@@ -30,3 +33,4 @@ jobs:
           commit: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
