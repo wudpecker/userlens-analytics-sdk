@@ -8,6 +8,10 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rollup -c rollup.config.mjs"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wudpecker/userlens-analytics-sdk"
+  },
   "author": "Wudpecker",
   "license": "ISC",
   "description": "",
