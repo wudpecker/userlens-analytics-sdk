@@ -132,14 +132,14 @@ export default class EventCollector {
     }
 
     if (trackNetworkCalls) {
-      // In auto-upload mode, always exclude Userlens API endpoints to prevent infinite loops
+      // Always exclude Userlens API endpoints — in auto-upload mode this
+      // prevents infinite loops, and in callback mode it prevents the
+      // customer's forwarder from generating self-referential events.
       const ignoreUrls = [...(networkIgnoreUrls || [])];
-      if (this.autoUploadModeEnabled) {
-        const userlensApiPatterns = USERLENS_API_DOMAINS.map(
-          (domain) => new RegExp(`^https?://${domain.replace(/\./g, "\\.")}`)
-        );
-        ignoreUrls.push(...userlensApiPatterns);
-      }
+      const userlensApiPatterns = USERLENS_API_DOMAINS.map(
+        (domain) => new RegExp(`^https?://${domain.replace(/\./g, "\\.")}`)
+      );
+      ignoreUrls.push(...userlensApiPatterns);
 
       this.networkTracker = new NetworkTracker({
         onEvent: (event) => {

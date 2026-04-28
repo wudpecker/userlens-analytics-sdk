@@ -19,9 +19,9 @@ export type AutoUploadConfig = {
 
 export type CallbackModeConfig = {
   callback: (
-    events: (PushedEvent | PageViewEvent | RawEvent | NetworkEvent)[]
+    events: (PushedEvent | PageViewEvent | RawEvent | NetworkEvent)[],
   ) => void;
-  userId?: undefined;
+  userId?: string;
   WRITE_CODE?: undefined;
   intervalTime?: number;
   skipRawEvents?: boolean;
@@ -110,14 +110,41 @@ export interface PageViewEvent {
 }
 
 // react
-export type UserlensProviderConfig = {
-  WRITE_CODE: string;
-  userId: string;
-  userTraits: Record<string, any>;
-  groupTraits?: Record<string, any>;
-  groupId?: string;
-  eventCollector?: EventCollectorConfig;
+type ProviderCollectorOptions = {
+  intervalTime?: number;
+  skipRawEvents?: boolean;
+  useLighterSnapshot?: boolean;
+  debug?: boolean;
+  trackNetworkCalls?: boolean;
+  networkCaptureBody?: boolean;
+  networkMaxBodySize?: number;
+  networkIgnoreUrls?: RegExp[];
+  networkAllowUrls?: RegExp[];
 };
+
+export type UserlensProviderConfig =
+  | {
+      // Auto-upload mode
+      WRITE_CODE: string;
+      userId: string;
+      userTraits: Record<string, any>;
+      groupTraits?: Record<string, any>;
+      groupId?: string;
+      eventCollector?: ProviderCollectorOptions;
+    }
+  | {
+      // Callback mode
+      WRITE_CODE?: undefined;
+      userId?: string;
+      userTraits?: undefined;
+      groupTraits?: undefined;
+      groupId?: undefined;
+      eventCollector: ProviderCollectorOptions & {
+        callback: (
+          events: (PushedEvent | PageViewEvent | RawEvent | NetworkEvent)[],
+        ) => void;
+      };
+    };
 
 // NetworkTracker
 export interface NetworkEventMetadata {

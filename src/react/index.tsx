@@ -41,33 +41,34 @@ const UserlensProvider: React.FC<{
     }
 
     let ecConfig: EventCollectorConfig;
-    if (typeof config?.eventCollector?.callback === "function") {
+    if (config.WRITE_CODE !== undefined) {
       ecConfig = {
-        callback: config?.eventCollector?.callback,
-        intervalTime: config?.eventCollector?.intervalTime,
-        skipRawEvents: config?.eventCollector?.skipRawEvents,
-        useLighterSnapshot: config?.eventCollector?.useLighterSnapshot,
-        trackNetworkCalls: config?.eventCollector?.trackNetworkCalls,
-        networkCaptureBody: config?.eventCollector?.networkCaptureBody,
-        networkMaxBodySize: config?.eventCollector?.networkMaxBodySize,
-        networkIgnoreUrls: config?.eventCollector?.networkIgnoreUrls,
-        networkAllowUrls: config?.eventCollector?.networkAllowUrls,
+        userId: config.userId,
+        groupId: config.groupId,
+        groupTraits: config.groupTraits,
+        WRITE_CODE: config.WRITE_CODE,
+        userTraits: config.userTraits,
+        intervalTime: config.eventCollector?.intervalTime,
+        skipRawEvents: config.eventCollector?.skipRawEvents,
+        useLighterSnapshot: config.eventCollector?.useLighterSnapshot,
+        trackNetworkCalls: config.eventCollector?.trackNetworkCalls,
+        networkCaptureBody: config.eventCollector?.networkCaptureBody,
+        networkMaxBodySize: config.eventCollector?.networkMaxBodySize,
+        networkIgnoreUrls: config.eventCollector?.networkIgnoreUrls,
+        networkAllowUrls: config.eventCollector?.networkAllowUrls,
       };
     } else {
       ecConfig = {
-        userId: config?.userId,
-        groupId: config?.groupId,
-        groupTraits: config?.groupTraits,
-        WRITE_CODE: config?.WRITE_CODE,
-        userTraits: config?.userTraits,
-        intervalTime: config?.eventCollector?.intervalTime,
-        skipRawEvents: config?.eventCollector?.skipRawEvents,
-        useLighterSnapshot: config?.eventCollector?.useLighterSnapshot,
-        trackNetworkCalls: config?.eventCollector?.trackNetworkCalls,
-        networkCaptureBody: config?.eventCollector?.networkCaptureBody,
-        networkMaxBodySize: config?.eventCollector?.networkMaxBodySize,
-        networkIgnoreUrls: config?.eventCollector?.networkIgnoreUrls,
-        networkAllowUrls: config?.eventCollector?.networkAllowUrls,
+        callback: config.eventCollector.callback,
+        userId: config.userId,
+        intervalTime: config.eventCollector.intervalTime,
+        skipRawEvents: config.eventCollector.skipRawEvents,
+        useLighterSnapshot: config.eventCollector.useLighterSnapshot,
+        trackNetworkCalls: config.eventCollector.trackNetworkCalls,
+        networkCaptureBody: config.eventCollector.networkCaptureBody,
+        networkMaxBodySize: config.eventCollector.networkMaxBodySize,
+        networkIgnoreUrls: config.eventCollector.networkIgnoreUrls,
+        networkAllowUrls: config.eventCollector.networkAllowUrls,
       };
     }
 
