@@ -4,7 +4,7 @@ Events go directly from the browser to Userlens. This is the quickest way to get
 
 ## Step 1: Get Your Write Code
 
-1. Go to [Userlens Settings](https://app.userlens.io/settings/userlens-sdk)
+1. Go to [Userlens Settings](https://app.userlens.io/settings/integrations/userlens-sdk)
 2. Copy your **Write Code**
 
 ## Step 2: Create the Provider Component

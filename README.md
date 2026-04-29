@@ -29,7 +29,7 @@ function App() {
   const config = useMemo(() => ({
     userId: currentUser.id,
     userTraits: { email: currentUser.email, plan: currentUser.plan },
-    WRITE_CODE: 'your-write-code',  // From app.userlens.io/settings
+    WRITE_CODE: 'your-write-code',  // From app.userlens.io/settings/integrations/userlens-sdk
   }), [currentUser.id]);
 
   return (

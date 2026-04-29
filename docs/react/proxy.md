@@ -4,7 +4,7 @@ Events are sent to your backend first, then forwarded to Userlens. Use this if y
 
 ## Step 1: Get Your Write Code
 
-1. Go to [Userlens Settings](https://app.userlens.io/settings/userlens-sdk)
+1. Go to [Userlens Settings](https://app.userlens.io/settings/integrations/userlens-sdk)
 2. Copy your **Write Code** (this will be used on your server)
 
 ## Step 2: Add the Provider

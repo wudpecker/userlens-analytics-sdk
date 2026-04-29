@@ -317,5 +317,5 @@ If you're still having issues:
 
 1. Enable `debug: true` and check console logs
 2. Check Network tab for request/response details
-3. Verify your Write Code at [Userlens Settings](https://app.userlens.io/settings/userlens-sdk)
+3. Verify your Write Code at [Userlens Settings](https://app.userlens.io/settings/integrations/userlens-sdk)
 4. Contact support at support@userlens.io

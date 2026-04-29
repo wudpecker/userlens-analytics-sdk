@@ -32,7 +32,7 @@ auth_token = Base64.strict_encode64("#{write_code}:")
 {% endtab %}
 {% endtabs %}
 
-Get your Write Code from [Userlens Settings](https://app.userlens.io/settings/userlens-sdk).
+Get your Write Code from [Userlens Settings](https://app.userlens.io/settings/integrations/userlens-sdk).
 
 ---
 
