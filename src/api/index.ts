@@ -4,6 +4,7 @@ const RAW_BASE_URL = "https://raw.userlens.io";
 export const USERLENS_API_DOMAINS = [
   "events.userlens.io",
   "raw.userlens.io",
+  "ul-ingest.userlens.io",
 ];
 
 import { PushedEvent, PageViewEvent, RawEvent, NetworkEvent } from "../types";

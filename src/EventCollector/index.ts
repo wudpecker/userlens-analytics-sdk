@@ -70,6 +70,7 @@ export default class EventCollector {
       networkMaxBodySize,
       networkIgnoreUrls,
       networkAllowUrls,
+      networkIgnoreMethods,
     } = config;
     const userTraits = (config as AutoUploadConfig).userTraits;
 
@@ -153,6 +154,7 @@ export default class EventCollector {
         maxBodySize: networkMaxBodySize,
         ignoreUrls,
         allowUrls: networkAllowUrls,
+        ignoreMethods: networkIgnoreMethods,
       });
       this.networkTracker.start();
 

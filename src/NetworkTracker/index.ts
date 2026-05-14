@@ -10,6 +10,7 @@ export default class NetworkTracker {
   private maxBodySize: number;
   private ignoreUrls: RegExp[];
   private allowUrls: RegExp[];
+  private ignoreMethods: Set<string>;
 
   constructor(config: NetworkTrackerConfig) {
     this.onEvent = config.onEvent;
@@ -18,6 +19,9 @@ export default class NetworkTracker {
     this.maxBodySize = config.maxBodySize ?? 10000; // 10KB default limit
     this.ignoreUrls = config.ignoreUrls ?? [];
     this.allowUrls = config.allowUrls ?? [];
+    this.ignoreMethods = new Set(
+      (config.ignoreMethods ?? []).map((m) => m.toUpperCase())
+    );
     this.originalFetch = window.fetch.bind(window);
   }
 
@@ -64,12 +68,17 @@ export default class NetworkTracker {
 
       const { url, method } = self.#extractUrlAndMethod(input, init);
 
-      // First: Check whitelist (if configured, URL must match)
+      // First: Check method blocklist
+      if (self.#shouldIgnoreMethod(method)) {
+        return self.originalFetch(input, init);
+      }
+
+      // Second: Check whitelist (if configured, URL must match)
       if (!self.#shouldAllowUrl(url)) {
         return self.originalFetch(input, init);
       }
 
-      // Second: Check blocklist (prevents infinite loops)
+      // Third: Check URL blocklist (prevents infinite loops)
       if (self.#shouldIgnoreUrl(url)) {
         return self.originalFetch(input, init);
       }
@@ -139,6 +148,11 @@ export default class NetworkTracker {
         method: input.method || "GET",
       };
     }
+  }
+
+  #shouldIgnoreMethod(method: string): boolean {
+    if (this.ignoreMethods.size === 0) return false;
+    return this.ignoreMethods.has(method.toUpperCase());
   }
 
   #shouldIgnoreUrl(url: string): boolean {

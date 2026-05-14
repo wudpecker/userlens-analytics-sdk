@@ -15,6 +15,7 @@ export type AutoUploadConfig = {
   networkMaxBodySize?: number;
   networkIgnoreUrls?: RegExp[];
   networkAllowUrls?: RegExp[];
+  networkIgnoreMethods?: string[];
 };
 
 export type CallbackModeConfig = {
@@ -32,6 +33,7 @@ export type CallbackModeConfig = {
   networkMaxBodySize?: number;
   networkIgnoreUrls?: RegExp[];
   networkAllowUrls?: RegExp[];
+  networkIgnoreMethods?: string[];
 };
 
 export type EventCollectorConfig = AutoUploadConfig | CallbackModeConfig;
@@ -120,6 +122,7 @@ type ProviderCollectorOptions = {
   networkMaxBodySize?: number;
   networkIgnoreUrls?: RegExp[];
   networkAllowUrls?: RegExp[];
+  networkIgnoreMethods?: string[];
 };
 
 export type UserlensProviderConfig =
@@ -173,4 +176,5 @@ export type NetworkTrackerConfig = {
   maxBodySize?: number;
   ignoreUrls?: RegExp[];
   allowUrls?: RegExp[];
+  ignoreMethods?: string[];
 };
